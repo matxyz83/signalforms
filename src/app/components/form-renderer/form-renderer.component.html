@@ -1,0 +1,20 @@
+<form [id]="formId()" class="form" (submit)="onSubmit($event)" novalidate>
+  @for (field of config(); track field.field) {
+    @if (field.showInForm !== false && !fieldFor(field)().hidden()) {
+      <div class="form-field-wrapper">
+        <ng-container
+          [ngComponentOutlet]="componentFor(field)"
+          [ngComponentOutletInputs]="inputsFor(field)"
+        />
+      </div>
+    }
+  }
+
+  @if (formErrors().length) {
+    <ul class="form-errors">
+      @for (e of formErrors(); track e.kind) {
+        <li>{{ (e.message ?? e.kind) | transloco }}</li>
+      }
+    </ul>
+  }
+</form>

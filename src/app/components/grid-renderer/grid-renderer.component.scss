@@ -1,0 +1,36 @@
+:host {
+  display: block;
+}
+
+.confirm-body {
+  margin: 0;
+}
+
+.cmd-cell {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+// Colonna azioni fissa a destra: sticky durante lo scroll orizzontale.
+// k-command-cell è la classe Kendo sulle celle dati della command column.
+:host ::ng-deep td.k-command-cell {
+  position: sticky;
+  right: 0;
+  z-index: 1;
+  background: var(--kendo-component-bg, #fff);
+  box-shadow: -1px 0 0 var(--kendo-grid-border, #dee2e6);
+}
+
+// Header e riga filtri della colonna azioni
+:host ::ng-deep .k-grid-header th:last-child {
+  position: sticky;
+  right: 0;
+  z-index: 2;
+  background: var(--kendo-grid-header-bg, #f5f5f5);
+  box-shadow: -1px 0 0 var(--kendo-grid-border, #dee2e6);
+}
+
+kendo-grid {
+  height: 100%;
+}

@@ -1,0 +1,29 @@
+:host {
+  display: block;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 10px;
+}
+
+.form-field-wrapper {
+  width: 100%;
+}
+
+.form-errors {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 10px 14px;
+  border-left: 3px solid #d32f2f;
+  background: #fff5f5;
+  border-radius: 4px;
+
+  li {
+    color: #d32f2f;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+}

@@ -1,0 +1,72 @@
+<div class="k-form-field">
+  <kendo-label [for]="config().field" [text]="config().label | transloco" />
+
+  @if (config().multiple) {
+    @if (config().searchFn) {
+      <kendo-multiselect
+        [id]="config().field"
+        [data]="displayData()"
+        textField="label"
+        valueField="value"
+        [value]="arrayValue()"
+        (valueChange)="onMultiValueChange($event)"
+        (blur)="state().markAsTouched()"
+        [placeholder]="(config().placeholder ?? '') | transloco"
+        [filterable]="true"
+        (open)="onOpen()"
+        (filterChange)="onFilterChange($event)"
+        [loading]="loading()"
+        [class.k-invalid]="showError()"
+      />
+    } @else {
+      <kendo-multiselect
+        [id]="config().field"
+        [data]="displayData()"
+        textField="label"
+        valueField="value"
+        [value]="arrayValue()"
+        (valueChange)="onMultiValueChange($event)"
+        (blur)="state().markAsTouched()"
+        [placeholder]="(config().placeholder ?? '') | transloco"
+        [filterable]="true"
+        [class.k-invalid]="showError()"
+      />
+    }
+  } @else {
+    @if (config().searchFn) {
+      <kendo-combobox
+        [id]="config().field"
+        [data]="displayData()"
+        textField="label"
+        valueField="value"
+        [value]="state().value()"
+        (valueChange)="onValueChange($event)"
+        (blur)="state().markAsTouched()"
+        [placeholder]="(config().placeholder ?? '') | transloco"
+        [filterable]="true"
+        (open)="onOpen()"
+        (filterChange)="onFilterChange($event)"
+        [loading]="loading()"
+        [class.k-invalid]="showError()"
+      />
+    } @else {
+      <kendo-combobox
+        [id]="config().field"
+        [data]="displayData()"
+        textField="label"
+        valueField="value"
+        [value]="state().value()"
+        (valueChange)="onValueChange($event)"
+        (blur)="state().markAsTouched()"
+        [placeholder]="(config().placeholder ?? '') | transloco"
+        [filterable]="true"
+        [class.k-invalid]="showError()"
+        [loading]="loading()"
+      />
+    }
+  }
+
+  @if (showError()) {
+    <kendo-formerror>{{ errorInfo().key | transloco: errorInfo().params }}</kendo-formerror>
+  }
+</div>

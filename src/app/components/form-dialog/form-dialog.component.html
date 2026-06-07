@@ -1,0 +1,18 @@
+@if (open()) {
+  <kendo-dialog
+    [title]="title()"
+    (close)="cancel.emit()"
+    [minWidth]="320"
+    [width]="580"
+  >
+    <div class="dialog-body">
+      <ng-content />
+    </div>
+    <kendo-dialog-actions layout="end">
+      <button kendoButton type="button" (click)="cancel.emit()">{{ 'form.cancel' | transloco }}</button>
+      <button kendoButton themeColor="primary" type="submit" [attr.form]="formId()">
+        {{ submitLabel() }}
+      </button>
+    </kendo-dialog-actions>
+  </kendo-dialog>
+}

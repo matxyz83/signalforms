@@ -1,0 +1,30 @@
+<div class="k-form-field">
+  <kendo-label [for]="config().field" [text]="config().label | transloco" />
+
+  @if (isNumeric()) {
+    <kendo-numerictextbox
+      [id]="config().field"
+      [value]="numericValue()"
+      (valueChange)="onValueChange($event)"
+      (blur)="state().markAsTouched()"
+      [placeholder]="(config().placeholder ?? '') | transloco"
+      [class.k-invalid]="showError()"
+      [spinners]="false"
+      [format]="'#'"
+    />
+  } @else {
+    <kendo-textbox
+      [id]="config().field"
+      [type]="inputType()"
+      [value]="stringValue()"
+      (valueChange)="onValueChange($event)"
+      (blur)="state().markAsTouched()"
+      [placeholder]="(config().placeholder ?? '') | transloco"
+      [class.k-invalid]="showError()"
+    />
+  }
+
+  @if (showError()) {
+    <kendo-formerror>{{ errorInfo().key | transloco: errorInfo().params }}</kendo-formerror>
+  }
+</div>

@@ -1,0 +1,200 @@
+import { Observable } from 'rxjs';
+import { ValidationError } from '@angular/forms/signals';
+
+export enum FieldType {
+  Input    = 'input',
+  Select   = 'select',
+  Combobox = 'combobox',
+  Checkbox = 'checkbox',
+  Textarea = 'textarea',
+  Array    = 'array',
+  Date     = 'date',
+  DateTime = 'datetime',
+  Time     = 'time',
+}
+
+export enum ValidatorType {
+  Required  = 'required',
+  MinLength = 'minLength',
+  MaxLength = 'maxLength',
+  Min       = 'min',
+  Max       = 'max',
+  Pattern   = 'pattern',
+  Email     = 'email',
+}
+
+export interface ValidatorConfig {
+  type: ValidatorType;
+  value?: string | number;
+  /** Sovrascrive il messaggio di errore di default */
+  message?: string;
+}
+
+export interface FieldOption {
+  value: unknown;
+  label: string;
+  disabled?: boolean;
+}
+
+export type CustomValidatorFn = (value: unknown) =>
+  | { kind: string; message?: string }
+  | null | undefined | void;
+
+export interface AsyncValidatorConfig {
+  validate: (value: unknown) => Promise<{ kind: string; message?: string } | null>;
+  /** Debounce in ms prima di avviare la chiamata async (default 300) */
+  debounce?: number;
+}
+
+/** Opzioni form-level passate a FormEngineService.buildForm() */
+export interface FormBuildOptions<T> {
+  /** Validatori sincroni cross-field (operano sull'intero valore del form) */
+  validators?: Array<
+    (values: T) =>
+      | { kind: string; message?: string }
+      | { kind: string; message?: string }[]
+      | null | undefined | void
+  >;
+}
+
+export type InputType =
+  | 'text' | 'email' | 'number' | 'tel'
+  | 'url'  | 'password' | 'search' | 'color';
+
+/**
+ * Opzioni per il filtro combobox della grid: array statico, Observable, o factory function.
+ * A differenza di OptionsLoader non riceve lo stato del form.
+ */
+export type GridOptionsLoader =
+  | FieldOption[]
+  | Observable<FieldOption[]>
+  | (() => Observable<FieldOption[]>);
+
+export interface GridColumnConfig {
+  field: string;
+  title: string;
+  width?: number;
+  filterable?: boolean;
+  sortable?: boolean;
+  /** `'combobox'` abilita il filtro a selezione con kendo-combobox (richiede filterOptions). `'time'` usa kendo-timepicker confrontando solo ore/minuti/secondi. */
+  filter?: 'text' | 'numeric' | 'date' | 'boolean' | 'combobox' | 'time';
+  /** Formato Kendo per la cella (es. '{0:d}' per date, '{0:n2}' per numeri) */
+  format?: string;
+  /** Opzioni per il filtro combobox: statiche, Observable, o factory */
+  filterOptions?: GridOptionsLoader;
+  /** Operatore di filtro (default: 'eq'; usare 'contains' per campi array come interessi) */
+  filterOperator?: string;
+  /**
+   * Campo da usare nel filtro emesso via `serverStateChange` al posto di `field.value`.
+   * Necessario quando il server si aspetta un nome diverso (es. `regioneId` invece di `regione.value`).
+   */
+  filterField?: string;
+  /**
+   * Modalità di rendering della cella.
+   * `'option'` → usa labelForValue() (dati FieldOption senza filtro combobox).
+   * `'boolean'` → checkbox readonly.
+   * `'text'` → default Kendo (omettibile).
+   */
+  display?: 'text' | 'option' | 'boolean';
+  /**
+   * Formatter personalizzato per la cella.
+   * Ha la precedenza su `display` e sul rendering nativo di Kendo.
+   * Applicabile a qualsiasi tipo di colonna (`filter: 'combobox'`, `'date'`, `'time'`, ecc.).
+   * Esempio: `displayFn: (v) => v ? DateTime.fromISO(v as string).toFormat('dd/MM/yyyy') : ''`
+   */
+  displayFn?: (value: unknown) => string;
+}
+
+export type OptionsLoader = FieldOption[] | Observable<FieldOption[]> | ((state: Record<string, unknown>) => FieldOption[] | Observable<FieldOption[]>);
+
+/**
+ * Regola di visibilità dichiarativa — serializzabile in JSON.
+ * Usata in DynamicFieldConfig al posto della lambda `visibleWhen`.
+ * DynamicFormService.toFormConfig() la converte nella lambda attesa da FormEngineService.
+ */
+export interface DynamicVisibilityRule {
+  /** Campo del form da osservare */
+  field: string;
+  /** Operatore di confronto */
+  operator: 'eq' | 'neq' | 'truthy' | 'falsy';
+  /**
+   * Valore da confrontare (per 'eq' e 'neq').
+   * Per campi Select/Combobox viene confrontato con il `.value` dell'opzione selezionata.
+   */
+  value?: unknown;
+}
+
+/**
+ * Sottoinsieme JSON-serializzabile di FormFieldConfig.
+ * Usato per campi dinamici che provengono da API/DB.
+ *
+ * Esclude i campi non serializzabili:
+ * - `options` come Observable o lambda → solo `FieldOption[]` statico
+ * - `searchFn`, `visibleWhen`, `customValidators`, `asyncValidators` → sostituiti da versioni dichiarative
+ * - `arrayConfig` → non supportato nei campi dinamici
+ */
+export type DynamicFieldConfig = Omit<
+  FormFieldConfig,
+  'options' | 'searchFn' | 'visibleWhen' | 'customValidators' | 'asyncValidators' | 'arrayConfig'
+> & {
+  /** Solo array statico di opzioni — Observable e lambda non sono serializzabili in JSON */
+  options?: FieldOption[];
+  /** Visibilità dichiarativa — convertita in funzione da DynamicFormService.toFormConfig() */
+  visibleWhen?: DynamicVisibilityRule;
+};
+
+/**
+ * Sottoinsieme JSON-serializzabile di GridColumnConfig.
+ * Usato per colonne dinamiche che provengono da API/DB.
+ *
+ * Esclude i campi non serializzabili:
+ * - `filterOptions` come Observable o factory → solo `FieldOption[]` statico
+ * - `displayFn` → funzione non serializzabile
+ */
+export type DynamicGridColumnConfig = Omit<GridColumnConfig, 'filterOptions' | 'displayFn'> & {
+  /** Solo array statico di opzioni filtro */
+  filterOptions?: FieldOption[];
+};
+
+export interface FormFieldConfig {
+  type: FieldType;
+  /** Chiave univoca del campo — corrisponde alla proprietà nel modello tipizzato */
+  field: string;
+  label: string;
+  placeholder?: string;
+  defaultValue?: unknown;
+  validators?: ValidatorConfig[];
+  /** Validatori sincroni custom a livello di singolo controllo */
+  customValidators?: CustomValidatorFn[];
+  /** Validatori asincroni a livello di singolo controllo */
+  asyncValidators?: AsyncValidatorConfig[];
+  /**
+   * Lista statica, Observable, oppure lambda `(state) => …`.
+   * La lambda riceve i valori correnti del form e restituisce opzioni statiche o un Observable.
+   * Utile per dropdown a cascata (es. città dipendenti dalla regione selezionata).
+   */
+  options?: OptionsLoader;
+  /**
+   * Ricerca server-side per il combobox.
+   * Riceve il termine digitato e restituisce un Observable di opzioni.
+   */
+  searchFn?: (term: string) => Observable<FieldOption[]>;
+  /**
+   * Determina la visibilità del campo in base ai valori correnti del form.
+   * `true` → campo visibile.
+   */
+  visibleWhen?: (values: Record<string, unknown>) => boolean;
+  arrayConfig?: FormFieldConfig[];
+  /** Tipo HTML dell'input; tipizzato per evitare valori non supportati */
+  inputType?: InputType;
+  /** Formato di visualizzazione per i picker data/ora (es. `'dd/MM/yyyy'`, `'HH:mm'`). Sovrascrive il default del tipo. */
+  format?: string;
+  multiple?: boolean;
+  /**
+   * Controlla se il campo viene renderizzato nel form.
+   * `undefined` (default) o `true` → campo visibile.
+   * `false` → campo nascosto nel form ma presente nel modello e nel payload.
+   * Utile per campi tecnici come l'ID del record in modalità edit.
+   */
+  showInForm?: boolean;
+}

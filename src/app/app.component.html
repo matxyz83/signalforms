@@ -1,0 +1,63 @@
+<div class="page">
+  <header class="page-header">
+    <div class="header-top">
+      <h1>Signal Forms Engine</h1>
+      <div class="lang-switcher">
+        <button (click)="setLang('it')" [class.active]="activeLang() === 'it'">IT</button>
+        <button (click)="setLang('en')" [class.active]="activeLang() === 'en'">EN</button>
+      </div>
+    </div>
+    <p class="subtitle">
+      Grid + Form generati da config —
+      <strong>filtri · ordinamento · paginazione · create · edit · delete</strong>
+    </p>
+  </header>
+
+  <main class="page-body">
+    <div class="card">
+      <app-grid-renderer
+        [data]="gridData()"
+        [columns]="gridColumns"
+        [state]="gridState()"
+        [editable]="true"
+        (stateChange)="onGridStateChange($event)"
+        (createClick)="onCreateClick()"
+        (editClick)="onEditClick($event)"
+        (deleteClick)="onDeleteClick($event)"
+        (selectionChange)="onSelectionChange($event)"
+      />
+    </div>
+
+    <app-form-dialog
+      [open]="showForm()"
+      [title]="isNew() ? '+ Nuovo' : '✎ Modifica #' + currentId()"
+      formId="person-form"
+      [submitLabel]="isNew() ? 'Crea' : 'Salva'"
+      (cancel)="cancelForm()"
+    >
+      <app-form-renderer
+        formId="person-form"
+        [config]="formConfig"
+        [form]="form"
+        (formSubmit)="onFormSubmit($event)"
+      />
+    </app-form-dialog>
+
+    @if (selectedPeople().length) {
+      <div class="card payload-card">
+        <h2>Selezione <small>{{ selectedPeople().length }} element{{ selectedPeople().length === 1 ? 'o' : 'i' }}</small></h2>
+        <pre>{{ selectedJson() }}</pre>
+      </div>
+    }
+
+    @if (lastAction) {
+      <div class="card payload-card">
+        <h2>Ultimo payload <small>{{ lastAction.label }}</small></h2>
+        <pre>{{ lastAction.json }}</pre>
+      </div>
+    }
+
+    <hr class="section-divider" />
+    <app-dynamic-form-example />
+  </main>
+</div>

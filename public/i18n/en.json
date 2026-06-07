@@ -1,0 +1,130 @@
+{
+  "grid": {
+    "new": "+ New",
+    "editTitle": "Edit",
+    "deleteTitle": "Delete",
+    "confirmTitle": "Confirm deletion",
+    "confirmBody": "Delete the selected item?",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "filterPlaceholder": "Filter…"
+  },
+  "form": {
+    "cancel": "Cancel"
+  },
+  "errors": {
+    "required": "Required field",
+    "email": "Invalid email",
+    "minLength": "Minimum {{ min }} characters",
+    "maxLength": "Maximum {{ max }} characters",
+    "min": "Minimum value: {{ min }}",
+    "max": "Maximum value: {{ max }}",
+    "pattern": "Invalid format"
+  },
+  "fields": {
+    "id": {
+      "label": "ID"
+    },
+    "nome": {
+      "label": "Name",
+      "placeholder": "Enter name"
+    },
+    "email": {
+      "label": "Email",
+      "placeholder": "e.g. mario@example.com"
+    },
+    "eta": {
+      "label": "Age"
+    },
+    "tipo": {
+      "label": "Type"
+    },
+    "partitaIva": {
+      "label": "VAT Number",
+      "placeholder": "IT12345678901"
+    },
+    "regione": {
+      "label": "Region"
+    },
+    "citta": {
+      "label": "City",
+      "placeholder": "Search for a city…"
+    },
+    "note": {
+      "label": "Additional notes",
+      "placeholder": "Write any notes…"
+    },
+    "dataNascita": {
+      "label": "Date of birth"
+    },
+    "appuntamento": {
+      "label": "Appointment",
+      "placeholder": "Select date and time…"
+    },
+    "orarioPreferito": {
+      "label": "Preferred time",
+      "placeholder": "hh:mm"
+    },
+    "oraInizio": {
+      "label": "Start time",
+      "placeholder": "hh:mm"
+    },
+    "scadenza": {
+      "label": "Expiry (ISO string)",
+      "placeholder": "mm/dd/yyyy"
+    },
+    "ultimoAccesso": {
+      "label": "Last access (ISO string)",
+      "placeholder": "mm/dd/yyyy hh:mm"
+    },
+    "interessi": {
+      "label": "Interests",
+      "placeholder": "Search interests…"
+    },
+    "giorno": {
+      "label": "Preferred day"
+    },
+    "weekday": {
+      "label": "Weekday"
+    },
+    "newsletter": {
+      "label": "Subscribe to newsletter"
+    },
+    "termini": {
+      "label": "I accept the terms and conditions"
+    },
+    "contatti": {
+      "label": "Additional contacts",
+      "nome": {
+        "label": "Contact name",
+        "placeholder": "E.g. Mario Rossi"
+      },
+      "telefono": {
+        "label": "Phone",
+        "placeholder": "+39 …"
+      },
+      "ruolo": {
+        "label": "Role"
+      }
+    }
+  },
+  "columns": {
+    "nome": "Name",
+    "email": "Email",
+    "eta": "Age",
+    "tipo": "Type",
+    "regione": "Region",
+    "citta": "City",
+    "interessi": "Interests",
+    "giorno": "Day",
+    "weekday": "Weekday",
+    "oraInizio": "Start time",
+    "scadenza": "Expiry",
+    "ultimoAccesso": "Last access",
+    "newsletter": "Newsletter",
+    "dataNascita": "Date of birth"
+  },
+  "select": {
+    "choose": "— Select —"
+  }
+}

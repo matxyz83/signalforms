@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "Bash(xargs ls -la)",
+      "WebFetch(domain:angular.dev)",
+      "Bash(node *)",
+      "Bash(npx ng *)",
+      "WebFetch(domain:www.telerik.com)",
+      "Bash(npx tsc *)",
+      "Bash(yarn --version)",
+      "Read(//tmp/**)",
+      "Bash(npm pack *)",
+      "Bash(tar -xzf /tmp/progress-kendo-angular-grid-24.1.0.tgz -C /mnt/d/Projects/claude/sources/signalforms/node_modules/@progress/kendo-angular-grid --strip-components=1)",
+      "Bash(tar -xzf /tmp/progress-kendo-data-query-1.7.4.tgz -C /mnt/d/Projects/claude/sources/signalforms/node_modules/@progress/kendo-data-query --strip-components=1)",
+      "Bash(nvm use *)",
+      "Bash(find /mnt/d/Projects/claude/sources/signalforms/node_modules/@angular/forms -name \"*.d.ts\" | grep -i signal | head -10)",
+      "Read(//mnt/d/Projects/claude/sources/signalforms/node_modules/@angular/**)"
+    ]
+  }
+}

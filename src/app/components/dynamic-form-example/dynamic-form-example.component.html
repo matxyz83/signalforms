@@ -1,0 +1,60 @@
+<section class="example">
+  <div class="example-header">
+    <div>
+      <h2>Campi dinamici da JSON</h2>
+      <p class="desc">
+        La config dei campi dinamici (<em>Livello</em>, <em>Priorità</em>, <em>Notifiche</em>)
+        proviene da un <code>DynamicFieldConfig[]</code> che simula una risposta API/DB.
+        I valori vengono serializzati nel campo <code>data: string</code> dell'entità.
+        <em>Priorità</em> usa <code>visibleWhen: &#123; operator: 'eq', value: 'oro' &#125;</code>
+        — regola dichiarativa convertita in lambda da <code>DynamicFormService</code>.
+      </p>
+    </div>
+    <button class="btn-toggle" (click)="showConfigJson = !showConfigJson">
+      {{ showConfigJson ? 'Nascondi config' : 'Vedi DynamicFieldConfig[]' }}
+    </button>
+  </div>
+
+  @if (showConfigJson) {
+    <div class="card config-card">
+      <h3>DynamicFieldConfig[] — dalla "API"</h3>
+      <pre>{{ dynConfigJson }}</pre>
+    </div>
+  }
+
+  <div class="card">
+    <app-grid-renderer
+      [data]="gridData()"
+      [columns]="gridColumns"
+      [state]="gridState()"
+      [editable]="true"
+      [pageable]="false"
+      (stateChange)="onGridStateChange($event)"
+      (createClick)="onCreateClick()"
+      (editClick)="onEditClick($event)"
+      (deleteClick)="onDeleteClick($event)"
+    />
+  </div>
+
+  <app-form-dialog
+    [open]="showForm()"
+    [title]="isNew() ? 'Nuovo membro' : 'Modifica #' + currentId()"
+    formId="member-form"
+    [submitLabel]="isNew() ? 'Crea' : 'Salva'"
+    (cancel)="cancelForm()"
+  >
+    <app-form-renderer
+      formId="member-form"
+      [config]="fullFormConfig"
+      [form]="form"
+      (formSubmit)="onFormSubmit($event)"
+    />
+  </app-form-dialog>
+
+  @if (lastPayload) {
+    <div class="card payload-card">
+      <h3>Ultimo payload <small>— i campi dinamici sono in <code>data</code></small></h3>
+      <pre>{{ lastPayload }}</pre>
+    </div>
+  }
+</section>

@@ -1,0 +1,17 @@
+<div class="k-form-field">
+  <kendo-label [for]="areaRef" [text]="config().label | transloco" />
+  <textarea
+    #areaRef
+    kendoTextArea
+    [id]="config().field"
+    [placeholder]="(config().placeholder ?? '') | transloco"
+    [value]="stringValue()"
+    (input)="onInput($event)"
+    (blur)="state().markAsTouched()"
+    [class.k-invalid]="showError()"
+    rows="4"
+  ></textarea>
+  @if (showError()) {
+    <kendo-formerror>{{ errorInfo().key | transloco: errorInfo().params }}</kendo-formerror>
+  }
+</div>

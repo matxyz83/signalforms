@@ -1,0 +1,118 @@
+:host {
+  display: block;
+}
+
+.example {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.example-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+h2 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin: 0 0 6px;
+}
+
+.desc {
+  color: #666;
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 0;
+  max-width: 720px;
+
+  code {
+    background: #f0f0f8;
+    color: #5b6abf;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 12px;
+  }
+}
+
+.btn-toggle {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  border: 1px solid #5b6abf;
+  border-radius: 6px;
+  background: #fff;
+  color: #5b6abf;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+
+  &:hover {
+    background: #5b6abf;
+    color: #fff;
+  }
+}
+
+.card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+}
+
+.config-card {
+  h3 {
+    font-size: 13px;
+    font-weight: 600;
+    color: #555;
+    margin: 0 0 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  pre {
+    background: #1a1a2e;
+    color: #a9c4ff;
+    padding: 16px;
+    border-radius: 8px;
+    font-size: 12px;
+    overflow-x: auto;
+    margin: 0;
+    line-height: 1.5;
+  }
+}
+
+.payload-card {
+  h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: #444;
+    margin: 0 0 12px;
+  }
+
+  small {
+    font-weight: 400;
+    color: #888;
+    font-size: 12px;
+
+    code {
+      background: #f0f0f8;
+      color: #5b6abf;
+      padding: 1px 4px;
+      border-radius: 3px;
+    }
+  }
+
+  pre {
+    background: #1a1a2e;
+    color: #a9ffa9;
+    padding: 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    overflow-x: auto;
+    margin: 0;
+  }
+}

@@ -1,0 +1,43 @@
+<div class="k-form-field">
+  <kendo-label [for]="config().field" [text]="config().label | transloco" />
+
+  @switch (config().type) {
+    @case (FieldType.DateTime) {
+      <kendo-datetimepicker
+        [id]="config().field"
+        [value]="dateValue()"
+        [format]="displayFormat()"
+        (valueChange)="onValueChange($event)"
+        (blur)="state().markAsTouched()"
+        [placeholder]="(config().placeholder ?? '') | transloco"
+        [class.k-invalid]="showError()"
+      />
+    }
+    @case (FieldType.Time) {
+      <kendo-timepicker
+        [id]="config().field"
+        [value]="dateValue()"
+        [format]="displayFormat()"
+        (valueChange)="onValueChange($event)"
+        (blur)="state().markAsTouched()"
+        [placeholder]="(config().placeholder ?? '') | transloco"
+        [class.k-invalid]="showError()"
+      />
+    }
+    @default {
+      <kendo-datepicker
+        [id]="config().field"
+        [value]="dateValue()"
+        [format]="displayFormat()"
+        (valueChange)="onValueChange($event)"
+        (blur)="state().markAsTouched()"
+        [placeholder]="(config().placeholder ?? '') | transloco"
+        [class.k-invalid]="showError()"
+      />
+    }
+  }
+
+  @if (showError()) {
+    <kendo-formerror>{{ errorInfo().key | transloco: errorInfo().params }}</kendo-formerror>
+  }
+</div>

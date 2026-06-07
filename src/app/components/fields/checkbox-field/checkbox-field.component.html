@@ -1,0 +1,14 @@
+<div class="k-form-field k-checkbox-wrap">
+  <input
+    type="checkbox"
+    kendoCheckBox
+    [id]="config().field"
+    [checked]="boolValue()"
+    (change)="onChange($event)"
+    (blur)="state().markAsTouched()"
+  />
+  <kendo-label [for]="config().field" [text]="config().label | transloco" />
+  @if (showError()) {
+    <kendo-formerror>{{ errorInfo().key | transloco: errorInfo().params }}</kendo-formerror>
+  }
+</div>

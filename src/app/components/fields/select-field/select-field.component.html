@@ -1,0 +1,33 @@
+<div class="k-form-field">
+  <kendo-label [for]="config().field" [text]="config().label | transloco" />
+
+  @if (config().multiple) {
+    <kendo-multiselect
+      [id]="config().field"
+      [data]="displayOptions()"
+      textField="label"
+      valueField="value"
+      [value]="arrayValue()"
+      (valueChange)="onValueChange($event)"
+      (blur)="state().markAsTouched()"
+      [placeholder]="(config().placeholder ?? '') | transloco"
+      [class.k-invalid]="showError()"
+    />
+  } @else {
+    <kendo-dropdownlist
+      [id]="config().field"
+      [data]="displayOptions()"
+      textField="label"
+      valueField="value"
+      [value]="state().value()"
+      (valueChange)="onValueChange($event)"
+      (blur)="state().markAsTouched()"
+      [defaultItem]="defaultItem()"
+      [class.k-invalid]="showError()"
+    />
+  }
+
+  @if (showError()) {
+    <kendo-formerror>{{ errorInfo().key | transloco: errorInfo().params }}</kendo-formerror>
+  }
+</div>

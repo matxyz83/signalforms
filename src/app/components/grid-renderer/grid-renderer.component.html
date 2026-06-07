@@ -1,0 +1,78 @@
+<kendo-grid [data]="gridData()" [filterable]="'row'" [sortable]="true" [pageable]="pageable()"
+  [pageSize]="state().take ?? 10" [skip]="state().skip ?? 0" [sort]="state().sort ?? []" [filter]="state().filter"
+  [selectable]="selectableSettings()" [selectedKeys]="_selectedKeys()" [kendoGridSelectBy]="kendoSelectBy()"
+  (dataStateChange)="onStateChange($event)" (selectionChange)="onSelectionChange($event)">
+
+  @if (editable()) {
+  <ng-template kendoGridToolbarTemplate>
+    <button kendoButton [svgIcon]="iconAdd" themeColor="primary" size="small" (click)="createClick.emit()"></button>
+  </ng-template>
+  }
+
+  @if (!editable()) {
+  <kendo-grid-checkbox-column [width]="42" [showSelectAll]="true" [resizable]="false" />
+  }
+
+  @for (col of columns(); track col.field) {
+  <kendo-grid-column [field]="col.field" [title]="col.title | transloco" [width]="$any(col.width)"
+    [filterable]="col.filterable !== false" [sortable]="col.sortable !== false"
+    [filter]="$any(columnFilterType(col))" [format]="columnFormat(col)">
+
+    <!-- Cell: displayFn > label (combobox/option) > boolean > default Kendo -->
+    @if (col.displayFn) {
+    <ng-template kendoGridCellTemplate let-dataItem>{{ col.displayFn!(dataItem[col.field]) }}</ng-template>
+    } @else if (col.filter === 'combobox' || col.display === 'option') {
+    <ng-template kendoGridCellTemplate let-dataItem>{{ labelForValue(dataItem[col.field]) }}</ng-template>
+    } @else if (col.display === 'boolean') {
+    <ng-template kendoGridCellTemplate let-dataItem>
+      <input type="checkbox" [checked]="dataItem[col.field]" disabled readonly />
+    </ng-template>
+    }
+
+    <!-- Filter: solo per tipi con editor personalizzato -->
+    @if (col.filter === 'combobox') {
+    <ng-template kendoGridFilterCellTemplate>
+      <kendo-combobox [data]="getFilterOptions(col)" [value]="comboFilterValue(col)" textField="label"
+        valueField="value" [valuePrimitive]="true" [clearButton]="true"
+        [placeholder]="'grid.filterPlaceholder' | transloco" (valueChange)="applyComboFilter($event, col)" />
+    </ng-template>
+    } @else if (col.filter === 'date') {
+    <ng-template kendoGridFilterCellTemplate>
+      <kendo-datepicker [format]="'dd/MM/yyyy'" [value]="dateFilterValue(col)" [clearButton]="true"
+        (valueChange)="applyDateFilter($event, col)" />
+    </ng-template>
+    } @else if (col.filter === 'time') {
+    <ng-template kendoGridFilterCellTemplate>
+      <kendo-timepicker [value]="timeFilterValue(col)" [clearButton]="true"
+        (valueChange)="applyTimeFilter($event, col)" />
+    </ng-template>
+    }
+
+  </kendo-grid-column>
+  }
+
+  @if (editable()) {
+  <kendo-grid-command-column title="" [width]="80" [resizable]="false">
+    <ng-template kendoGridCellTemplate let-dataItem>
+      <div class="cmd-cell">
+        <button kendoButton [svgIcon]="iconEdit" themeColor="primary" size="small" [title]="'grid.editTitle' | transloco"
+          (click)="editClick.emit(dataItem)"></button>
+        <button kendoButton [svgIcon]="iconDelete" themeColor="error" size="small"
+          [title]="'grid.deleteTitle' | transloco" (click)="pendingDelete.set(dataItem)"></button>
+      </div>
+    </ng-template>
+  </kendo-grid-command-column>
+  }
+</kendo-grid>
+
+@if (pendingDelete()) {
+<kendo-dialog [title]="'grid.confirmTitle' | transloco" (close)="pendingDelete.set(null)" [minWidth]="280"
+  [width]="380">
+  <p class="confirm-body">{{ 'grid.confirmBody' | transloco }}</p>
+  <kendo-dialog-actions layout="end">
+    <button kendoButton type="button" (click)="pendingDelete.set(null)">{{ 'grid.cancel' | transloco }}</button>
+    <button kendoButton themeColor="error" type="button" (click)="confirmDelete()">{{ 'grid.delete' | transloco
+      }}</button>
+  </kendo-dialog-actions>
+</kendo-dialog>
+}

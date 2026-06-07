@@ -1,0 +1,10 @@
+:host {
+  display: block;
+}
+
+.dialog-body {
+  padding: 8px 0 4px;
+  max-height: 70vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+}

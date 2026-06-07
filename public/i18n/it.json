@@ -1,0 +1,130 @@
+{
+  "grid": {
+    "new": "+ Nuovo",
+    "editTitle": "Modifica",
+    "deleteTitle": "Elimina",
+    "confirmTitle": "Conferma eliminazione",
+    "confirmBody": "Eliminare l'elemento selezionato?",
+    "cancel": "Annulla",
+    "delete": "Elimina",
+    "filterPlaceholder": "Filtra…"
+  },
+  "form": {
+    "cancel": "Annulla"
+  },
+  "errors": {
+    "required": "Campo obbligatorio",
+    "email": "Email non valida",
+    "minLength": "Minimo {{ min }} caratteri",
+    "maxLength": "Massimo {{ max }} caratteri",
+    "min": "Valore minimo: {{ min }}",
+    "max": "Valore massimo: {{ max }}",
+    "pattern": "Formato non valido"
+  },
+  "fields": {
+    "id": {
+      "label": "ID"
+    },
+    "nome": {
+      "label": "Nome",
+      "placeholder": "Inserisci il nome"
+    },
+    "email": {
+      "label": "Email",
+      "placeholder": "es. mario@esempio.it"
+    },
+    "eta": {
+      "label": "Età"
+    },
+    "tipo": {
+      "label": "Tipo"
+    },
+    "partitaIva": {
+      "label": "Partita IVA",
+      "placeholder": "IT12345678901"
+    },
+    "regione": {
+      "label": "Regione"
+    },
+    "citta": {
+      "label": "Città",
+      "placeholder": "Cerca una città…"
+    },
+    "note": {
+      "label": "Note aggiuntive",
+      "placeholder": "Scrivi eventuali note…"
+    },
+    "dataNascita": {
+      "label": "Data di nascita"
+    },
+    "appuntamento": {
+      "label": "Appuntamento",
+      "placeholder": "Seleziona data e ora…"
+    },
+    "orarioPreferito": {
+      "label": "Orario preferito",
+      "placeholder": "hh:mm"
+    },
+    "oraInizio": {
+      "label": "Ora inizio",
+      "placeholder": "hh:mm"
+    },
+    "scadenza": {
+      "label": "Scadenza (stringa ISO)",
+      "placeholder": "gg/mm/aaaa"
+    },
+    "ultimoAccesso": {
+      "label": "Ultimo accesso (stringa ISO)",
+      "placeholder": "gg/mm/aaaa hh:mm"
+    },
+    "interessi": {
+      "label": "Interessi",
+      "placeholder": "Cerca interessi…"
+    },
+    "giorno": {
+      "label": "Giorno preferito"
+    },
+    "weekday": {
+      "label": "Giorno settimana"
+    },
+    "newsletter": {
+      "label": "Iscriviti alla newsletter"
+    },
+    "termini": {
+      "label": "Accetto i termini e le condizioni"
+    },
+    "contatti": {
+      "label": "Contatti aggiuntivi",
+      "nome": {
+        "label": "Nome contatto",
+        "placeholder": "Es. Mario Rossi"
+      },
+      "telefono": {
+        "label": "Telefono",
+        "placeholder": "+39 …"
+      },
+      "ruolo": {
+        "label": "Ruolo"
+      }
+    }
+  },
+  "columns": {
+    "nome": "Nome",
+    "email": "Email",
+    "eta": "Età",
+    "tipo": "Tipo",
+    "regione": "Regione",
+    "citta": "Città",
+    "interessi": "Interessi",
+    "giorno": "Giorno",
+    "weekday": "Giorno sett.",
+    "oraInizio": "Ora inizio",
+    "scadenza": "Scadenza",
+    "ultimoAccesso": "Ultimo accesso",
+    "newsletter": "Newsletter",
+    "dataNascita": "Nascita"
+  },
+  "select": {
+    "choose": "— Seleziona —"
+  }
+}

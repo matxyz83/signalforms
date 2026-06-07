@@ -1,0 +1,14 @@
+:host {
+  display: block;
+}
+
+.k-checkbox-wrap {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+
+  kendo-formerror {
+    flex: 1 0 100%;
+  }
+}
