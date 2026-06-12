@@ -1,0 +1,33 @@
+:host {
+  display: block;
+}
+
+.section-header {
+  margin-bottom: 16px;
+
+  h2 { margin: 0 0 6px; }
+
+  .desc {
+    margin: 0;
+    font-size: 13px;
+    color: #555;
+    line-height: 1.6;
+
+    code {
+      background: #f0f0f0;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-size: 12px;
+    }
+  }
+}
+
+.payload-card pre {
+  background: #f0fff4;
+  border-left: 3px solid #388e3c;
+  padding: 10px 14px;
+  border-radius: 4px;
+  font-size: 12px;
+  margin: 0;
+  white-space: pre-wrap;
+}

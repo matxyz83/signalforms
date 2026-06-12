@@ -1,4 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { KENDO_DIALOGS } from "@progress/kendo-angular-dialog";
 import { toSignal } from '@angular/core/rxjs-interop';
 import { of } from 'rxjs';
 import { process, State } from '@progress/kendo-data-query';
@@ -12,7 +13,7 @@ import { FormRendererComponent } from './components/form-renderer/form-renderer.
 import { FormDialogComponent } from './components/form-dialog/form-dialog.component';
 import { GridRendererComponent, TypedGridResult } from './components/grid-renderer/grid-renderer.component';
 import { DynamicFormExampleComponent } from './components/dynamic-form-example/dynamic-form-example.component';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { LookupExampleComponent } from './components/lookup-example/lookup-example.component';
 
 interface ContattoForm {
   nome: string;
@@ -117,7 +118,7 @@ function weekdaysForLocale(locale: string): FieldOption[] {
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [GridRendererComponent, FormDialogComponent, FormRendererComponent, DynamicFormExampleComponent],
+  imports: [KENDO_DIALOGS, GridRendererComponent, FormDialogComponent, FormRendererComponent, DynamicFormExampleComponent, LookupExampleComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
 })

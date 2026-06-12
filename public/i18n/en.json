@@ -93,6 +93,12 @@
     "termini": {
       "label": "I accept the terms and conditions"
     },
+    "prodotto": {
+      "label": "Product"
+    },
+    "quantita": {
+      "label": "Quantity"
+    },
     "contatti": {
       "label": "Additional contacts",
       "nome": {
@@ -122,9 +128,22 @@
     "scadenza": "Expiry",
     "ultimoAccesso": "Last access",
     "newsletter": "Newsletter",
-    "dataNascita": "Date of birth"
+    "dataNascita": "Date of birth",
+    "prodotto": "Product",
+    "quantita": "Qty",
+    "codice": "Code",
+    "categoria": "Category",
+    "prezzo": "Price"
   },
   "select": {
     "choose": "— Select —"
+  },
+  "lookup": {
+    "title": "Search",
+    "searchPlaceholder": "Search…",
+    "open": "Open search",
+    "clear": "Clear selection",
+    "select": "Select",
+    "noResults": "No results"
   }
 }

@@ -11,6 +11,7 @@ import { SelectFieldComponent } from '../fields/select-field/select-field.compon
 import { ComboboxFieldComponent } from '../fields/combobox-field/combobox-field.component';
 import { ArrayFieldComponent } from '../fields/array-field/array-field.component';
 import { DateFieldComponent } from '../fields/date-field/date-field.component';
+import { LookupFieldComponent } from '../fields/lookup-field/lookup-field.component';
 
 const FIELD_COMPONENTS: Record<FieldType, Type<unknown>> = {
   [FieldType.Input]:    InputFieldComponent,
@@ -22,6 +23,7 @@ const FIELD_COMPONENTS: Record<FieldType, Type<unknown>> = {
   [FieldType.Date]:     DateFieldComponent,
   [FieldType.DateTime]: DateFieldComponent,
   [FieldType.Time]:     DateFieldComponent,
+  [FieldType.Lookup]:   LookupFieldComponent,
 };
 
 @Component({

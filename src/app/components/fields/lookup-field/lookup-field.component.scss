@@ -1,0 +1,30 @@
+:host {
+  display: block;
+}
+
+.lookup-row {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+
+  .lookup-text {
+    flex: 1;
+  }
+}
+
+.lookup-search {
+  padding: 12px;
+  border-bottom: 1px solid var(--kendo-color-border, #e0e0e0);
+}
+
+.lookup-grid {
+  max-height: 340px;
+}
+
+.lookup-empty {
+  text-align: center;
+  color: #888;
+  padding: 16px;
+  margin: 0;
+  font-size: 13px;
+}

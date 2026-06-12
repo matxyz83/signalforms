@@ -93,6 +93,12 @@
     "termini": {
       "label": "Accetto i termini e le condizioni"
     },
+    "prodotto": {
+      "label": "Prodotto"
+    },
+    "quantita": {
+      "label": "Quantità"
+    },
     "contatti": {
       "label": "Contatti aggiuntivi",
       "nome": {
@@ -122,9 +128,22 @@
     "scadenza": "Scadenza",
     "ultimoAccesso": "Ultimo accesso",
     "newsletter": "Newsletter",
-    "dataNascita": "Nascita"
+    "dataNascita": "Nascita",
+    "prodotto": "Prodotto",
+    "quantita": "Qtà",
+    "codice": "Codice",
+    "categoria": "Categoria",
+    "prezzo": "Prezzo"
   },
   "select": {
     "choose": "— Seleziona —"
+  },
+  "lookup": {
+    "title": "Cerca",
+    "searchPlaceholder": "Cerca…",
+    "open": "Apri ricerca",
+    "clear": "Rimuovi selezione",
+    "select": "Seleziona",
+    "noResults": "Nessun risultato"
   }
 }

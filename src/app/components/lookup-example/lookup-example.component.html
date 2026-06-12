@@ -1,0 +1,44 @@
+<div class="section-header">
+  <h2>Lookup Field</h2>
+  <p class="desc">
+    <code>FieldType.Lookup</code> — apre una dialog con ricerca server-side (simulata, 400 ms delay)
+    e griglia di risultati configurabile. Il valore selezionato viene memorizzato come
+    <code>FieldOption</code>, identico a Select e Combobox.
+  </p>
+</div>
+
+<div class="card">
+  <app-grid-renderer
+    [data]="gridData()"
+    [columns]="gridColumns"
+    [state]="gridState()"
+    [editable]="true"
+    [pageable]="false"
+    (stateChange)="onGridStateChange($event)"
+    (createClick)="onCreateClick()"
+    (editClick)="onEditClick($event)"
+    (deleteClick)="onDeleteClick($event)"
+  />
+</div>
+
+<app-form-dialog
+  [open]="showForm()"
+  [title]="isNew() ? 'Nuovo ordine' : 'Modifica ordine #' + currentId()"
+  formId="lookup-example-form"
+  [submitLabel]="isNew() ? 'Crea' : 'Salva'"
+  (cancel)="cancelForm()"
+>
+  <app-form-renderer
+    formId="lookup-example-form"
+    [config]="formConfig"
+    [form]="form"
+    (formSubmit)="onFormSubmit($event)"
+  />
+</app-form-dialog>
+
+@if (lastPayload()) {
+  <div class="card payload-card">
+    <h3>Ultimo payload</h3>
+    <pre>{{ lastPayload() }}</pre>
+  </div>
+}

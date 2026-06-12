@@ -1,5 +1,4 @@
 import { Observable } from 'rxjs';
-import { ValidationError } from '@angular/forms/signals';
 
 export enum FieldType {
   Input    = 'input',
@@ -11,6 +10,7 @@ export enum FieldType {
   Date     = 'date',
   DateTime = 'datetime',
   Time     = 'time',
+  Lookup   = 'lookup',
 }
 
 export enum ValidatorType {
@@ -107,6 +107,36 @@ export interface GridColumnConfig {
 
 export type OptionsLoader = FieldOption[] | Observable<FieldOption[]> | ((state: Record<string, unknown>) => FieldOption[] | Observable<FieldOption[]>);
 
+/** Colonna mostrata nella griglia di risultati della dialog di lookup. */
+export interface LookupColumnConfig {
+  field: string;
+  /** Chiave Transloco per l'intestazione colonna */
+  title: string;
+  width?: number;
+}
+
+/**
+ * Configurazione per il campo Lookup.
+ * La dialog apre una mini-griglia con ricerca server-side.
+ * Il valore selezionato viene memorizzato come FieldOption (value + label).
+ */
+export interface LookupConfig {
+  /** Chiave Transloco per il titolo della dialog (default: 'lookup.title') */
+  title?: string;
+  /** Chiave Transloco per il placeholder della casella di ricerca (default: 'lookup.searchPlaceholder') */
+  searchPlaceholder?: string;
+  /** Numero minimo di caratteri prima di avviare la ricerca (default: 1) */
+  minSearchLength?: number;
+  /** Campo del risultato che diventa FieldOption.value (es. 'id') */
+  valueField: string;
+  /** Campo del risultato che diventa FieldOption.label (es. 'ragioneSociale') */
+  labelField: string;
+  /** Funzione di ricerca: riceve il termine e restituisce un Observable di righe */
+  searchFn: (term: string) => Observable<Record<string, unknown>[]>;
+  /** Colonne mostrate nella griglia di risultati */
+  columns: LookupColumnConfig[];
+}
+
 /**
  * Regola di visibilità dichiarativa — serializzabile in JSON.
  * Usata in DynamicFieldConfig al posto della lambda `visibleWhen`.
@@ -135,7 +165,7 @@ export interface DynamicVisibilityRule {
  */
 export type DynamicFieldConfig = Omit<
   FormFieldConfig,
-  'options' | 'searchFn' | 'visibleWhen' | 'customValidators' | 'asyncValidators' | 'arrayConfig'
+  'options' | 'searchFn' | 'visibleWhen' | 'customValidators' | 'asyncValidators' | 'arrayConfig' | 'lookupConfig'
 > & {
   /** Solo array statico di opzioni — Observable e lambda non sono serializzabili in JSON */
   options?: FieldOption[];
@@ -197,4 +227,6 @@ export interface FormFieldConfig {
    * Utile per campi tecnici come l'ID del record in modalità edit.
    */
   showInForm?: boolean;
+  /** Configurazione della dialog di lookup (solo per FieldType.Lookup) */
+  lookupConfig?: LookupConfig;
 }

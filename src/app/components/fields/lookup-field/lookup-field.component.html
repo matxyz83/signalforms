@@ -1,0 +1,20 @@
+<kendo-label [for]="config().field" [text]="config().label | transloco">
+  <div class="lookup-row">
+    <kendo-textbox
+      [id]="config().field"
+      [value]="displayValue()"
+      [readonly]="true"
+      [placeholder]="(config().placeholder ?? '') | transloco"
+      class="lookup-text"
+    />
+    <button kendoButton type="button" [svgIcon]="searchIcon" (click)="openDialog()" size="medium"
+      [title]="'lookup.open' | transloco"></button>
+    @if (displayValue()) {
+      <button kendoButton type="button" [svgIcon]="clearIcon" (click)="clear()" size="medium" fillMode="flat"
+        [title]="'lookup.clear' | transloco"></button>
+    }
+  </div>
+  @if (showError()) {
+    <kendo-formerror>{{ errorInfo().key | transloco: errorInfo().params }}</kendo-formerror>
+  }
+</kendo-label>
