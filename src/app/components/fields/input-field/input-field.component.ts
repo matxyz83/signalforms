@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, input, signal, Signal } from '@angular/core';
 import { InputsModule, FormFieldModule } from '@progress/kendo-angular-inputs';
 import { LabelModule } from '@progress/kendo-angular-label';
 import { TranslocoPipe } from '@jsverse/transloco';
@@ -14,10 +14,12 @@ import { firstErrorInfo } from '../../../utils/field-error';
   styleUrl: './input-field.component.scss',
 })
 export class InputFieldComponent {
-  readonly control = input.required<FieldTree<unknown>>();
-  readonly config  = input.required<FormFieldConfig>();
+  readonly control     = input.required<FieldTree<unknown>>();
+  readonly config      = input.required<FormFieldConfig>();
+  readonly disabledSig = input<Signal<boolean>>(signal(false));
 
-  readonly state = computed(() => this.control()());
+  readonly state      = computed(() => this.control()());
+  readonly isDisabled = computed(() => this.disabledSig()());
 
   readonly isNumeric = computed(() => this.config().inputType === 'number');
   readonly showError = computed(() => this.state().touched() && this.state().invalid());

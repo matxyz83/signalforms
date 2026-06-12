@@ -8,8 +8,8 @@
       class="lookup-text"
     />
     <button kendoButton type="button" [svgIcon]="searchIcon" (click)="openDialog()" size="medium"
-      [title]="'lookup.open' | transloco"></button>
-    @if (displayValue()) {
+      [title]="'lookup.open' | transloco" [disabled]="isDisabled()"></button>
+    @if (displayValue() && !isDisabled()) {
       <button kendoButton type="button" [svgIcon]="clearIcon" (click)="clear()" size="medium" fillMode="flat"
         [title]="'lookup.clear' | transloco"></button>
     }

@@ -1,9 +1,8 @@
-import { Component, computed, inject, input, output, Signal, Type, untracked } from '@angular/core';
+import { Component, computed, input, output, signal, Signal, Type, untracked } from '@angular/core';
 import { NgComponentOutlet } from '@angular/common';
 import { FieldTree, ValidationError } from '@angular/forms/signals';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { FieldType, FormFieldConfig } from '../../models/form-field-config';
-import { FormEngineService } from '../../services/form-engine.service';
 import { InputFieldComponent } from '../fields/input-field/input-field.component';
 import { TextareaFieldComponent } from '../fields/textarea-field/textarea-field.component';
 import { CheckboxFieldComponent } from '../fields/checkbox-field/checkbox-field.component';
@@ -38,9 +37,7 @@ export class FormRendererComponent<T> {
   /** Accettato come unknown per compatibilità con qualsiasi FieldTree<T> */
   readonly form   = input.required<FieldTree<T>>();
   readonly formId = input<string>('form-renderer');
-  readonly formSubmit = output<Record<string, unknown>>();
-
-  private readonly engine = inject(FormEngineService);
+  readonly formSubmit = output<T>();
 
   /**
    * Cache stabile dei FieldTree per campo.
@@ -79,10 +76,30 @@ export class FormRendererComponent<T> {
   });
 
   /**
+   * Per ogni campo: Signal<boolean> stabile che indica se il campo è readonly.
+   * - `readonly: true/false` → signal statico
+   * - `readonly: (values) => boolean` → computed reattivo su formValuesSignal
+   * Il riferimento al signal è stabile: inputsCache non si invalida al cambio valori.
+   */
+  private readonly disabledSignals = computed(() =>
+    new Map<string, Signal<boolean>>(
+      this.config()
+        .filter(f => f.showInForm !== false)
+        .map(f => {
+          const r = f.disabled;
+          if (!r) return [f.field, signal(false) as Signal<boolean>];
+          if (typeof r === 'boolean') return [f.field, signal(r) as Signal<boolean>];
+          const fn = r;
+          return [f.field, computed(() => fn(this.formValuesSignal())) as Signal<boolean>];
+        }),
+    ),
+  );
+
+  /**
    * Cache stabile degli oggetti inputs per NgComponentOutlet.
    * Evita che setInput() venga chiamato con un nuovo oggetto ad ogni CD,
    * il che riscatenava il computed `state` nei field component.
-   * `formValues` è il riferimento al signal (stabile), non il suo valore.
+   * `formValues` e `disabledSig` sono riferimenti a signal (stabili), non valori.
    */
   private readonly inputsCache = computed(() =>
     new Map<string, Record<string, unknown>>(
@@ -92,6 +109,7 @@ export class FormRendererComponent<T> {
           const inputs: Record<string, unknown> = {
             control: this.fieldTreeCache().get(f.field)!,
             config: f,
+            disabledSig: this.disabledSignals().get(f.field)!,
           };
           if (f.type === FieldType.Select || f.type === FieldType.Combobox) {
             inputs['formValues'] = this.formValuesSignal;
@@ -129,8 +147,6 @@ export class FormRendererComponent<T> {
     // Marca tutto il form come touched per mostrare gli errori dei campi
     rootState.markAsTouched();
     if (rootState.invalid()) return;
-    this.formSubmit.emit(
-      this.engine.serializeValue(this.form() as FieldTree<any>, this.config()),
-    );
+    this.formSubmit.emit(rootState.value());
   }
 }

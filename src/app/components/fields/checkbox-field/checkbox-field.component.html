@@ -6,6 +6,7 @@
     [checked]="boolValue()"
     (change)="onChange($event)"
     (blur)="state().markAsTouched()"
+    [disabled]="isDisabled()"
   />
   <kendo-label [for]="config().field" [text]="config().label | transloco" />
   @if (showError()) {

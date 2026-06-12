@@ -17,6 +17,7 @@
         (filterChange)="onFilterChange($event)"
         [loading]="loading()"
         [class.k-invalid]="showError()"
+        [disabled]="isDisabled()"
       />
     } @else {
       <kendo-multiselect
@@ -30,6 +31,7 @@
         [placeholder]="(config().placeholder ?? '') | transloco"
         [filterable]="true"
         [class.k-invalid]="showError()"
+        [disabled]="isDisabled()"
       />
     }
   } @else {
@@ -48,6 +50,7 @@
         (filterChange)="onFilterChange($event)"
         [loading]="loading()"
         [class.k-invalid]="showError()"
+        [readonly]="isDisabled()"
       />
     } @else {
       <kendo-combobox
@@ -62,6 +65,7 @@
         [filterable]="true"
         [class.k-invalid]="showError()"
         [loading]="loading()"
+        [readonly]="isDisabled()"
       />
     }
   }

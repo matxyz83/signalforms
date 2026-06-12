@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, input, signal, Signal } from '@angular/core';
 import { DateInputsModule } from '@progress/kendo-angular-dateinputs';
 import { LabelModule } from '@progress/kendo-angular-label';
 import { FormFieldModule } from '@progress/kendo-angular-inputs';
@@ -23,12 +23,14 @@ const DEFAULT_FORMAT: Partial<Record<FieldType, string>> = {
   styleUrl: './date-field.component.scss',
 })
 export class DateFieldComponent {
-  readonly control = input.required<FieldTree<unknown>>();
-  readonly config  = input.required<FormFieldConfig>();
+  readonly control     = input.required<FieldTree<unknown>>();
+  readonly config      = input.required<FormFieldConfig>();
+  readonly disabledSig = input<Signal<boolean>>(signal(false));
 
   readonly FieldType = FieldType;
 
-  readonly state = computed(() => this.control()());
+  readonly state      = computed(() => this.control()());
+  readonly isDisabled = computed(() => this.disabledSig()());
 
   /** Formato di visualizzazione nel picker — usa `config().format` se presente, altrimenti il default per tipo. */
   readonly displayFormat = computed(() => {

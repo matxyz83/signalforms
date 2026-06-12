@@ -12,6 +12,7 @@
       (blur)="state().markAsTouched()"
       [placeholder]="(config().placeholder ?? '') | transloco"
       [class.k-invalid]="showError()"
+      [disabled]="isDisabled()"
     />
   } @else {
     <kendo-dropdownlist
@@ -24,6 +25,7 @@
       (blur)="state().markAsTouched()"
       [defaultItem]="defaultItem()"
       [class.k-invalid]="showError()"
+      [disabled]="isDisabled()"
     />
   }
 

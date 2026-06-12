@@ -1,4 +1,4 @@
-import { Component, computed, inject, Injector, input, runInInjectionContext, Signal } from '@angular/core';
+import { Component, computed, inject, Injector, input, runInInjectionContext, signal, Signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { isObservable, Observable, of } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
@@ -23,14 +23,16 @@ function resolveOptions(opts: FieldOption[] | Observable<FieldOption[]> | undefi
   styleUrl: './select-field.component.scss',
 })
 export class SelectFieldComponent {
-  readonly control    = input.required<FieldTree<unknown>>();
-  readonly config     = input.required<FormFieldConfig>();
-  readonly formValues = input<Signal<Record<string, unknown>> | undefined>(undefined);
+  readonly control     = input.required<FieldTree<unknown>>();
+  readonly config      = input.required<FormFieldConfig>();
+  readonly formValues  = input<Signal<Record<string, unknown>> | undefined>(undefined);
+  readonly disabledSig = input<Signal<boolean>>(signal(false));
 
   private readonly injector  = inject(Injector);
   private readonly transloco = inject(TranslocoService);
 
-  readonly state = computed(() => this.control()());
+  readonly state      = computed(() => this.control()());
+  readonly isDisabled = computed(() => this.disabledSig()());
 
   private readonly stateValues = computed<Record<string, unknown>>(() => {
     const sig = this.formValues();

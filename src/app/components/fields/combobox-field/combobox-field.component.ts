@@ -24,14 +24,16 @@ function resolveOptions(opts: FieldOption[] | Observable<FieldOption[]> | undefi
   styleUrl: './combobox-field.component.scss',
 })
 export class ComboboxFieldComponent {
-  readonly control    = input.required<FieldTree<unknown>>();
-  readonly config     = input.required<FormFieldConfig>();
-  readonly formValues = input<Signal<Record<string, unknown>> | undefined>(undefined);
+  readonly control     = input.required<FieldTree<unknown>>();
+  readonly config      = input.required<FormFieldConfig>();
+  readonly formValues  = input<Signal<Record<string, unknown>> | undefined>(undefined);
+  readonly disabledSig = input<Signal<boolean>>(signal(false));
 
   private readonly injector = inject(Injector);
 
-  readonly state   = computed(() => this.control()());
-  readonly loading = signal(false);
+  readonly state      = computed(() => this.control()());
+  readonly isDisabled = computed(() => this.disabledSig()());
+  readonly loading    = signal(false);
 
   private readonly filterTerm    = signal('');
   private readonly searchInput$  = new Subject<string>();

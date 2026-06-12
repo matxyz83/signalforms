@@ -11,6 +11,7 @@
         (blur)="state().markAsTouched()"
         [placeholder]="(config().placeholder ?? '') | transloco"
         [class.k-invalid]="showError()"
+        [disabled]="isDisabled()"
       />
     }
     @case (FieldType.Time) {
@@ -22,6 +23,7 @@
         (blur)="state().markAsTouched()"
         [placeholder]="(config().placeholder ?? '') | transloco"
         [class.k-invalid]="showError()"
+        [disabled]="isDisabled()"
       />
     }
     @default {
@@ -33,6 +35,7 @@
         (blur)="state().markAsTouched()"
         [placeholder]="(config().placeholder ?? '') | transloco"
         [class.k-invalid]="showError()"
+        [disabled]="isDisabled()"
       />
     }
   }

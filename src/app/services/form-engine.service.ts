@@ -107,24 +107,4 @@ export class FormEngineService {
     });
   }
 
-  /**
-   * Serializza il form escludendo i campi nascosti (hidden).
-   * @param fieldTree FieldTree del form
-   * @param config    Configurazione originale (per iterare i campi)
-   */
-  serializeValue(
-    fieldTree: FieldTree<any>,
-    config: FormFieldConfig[],
-  ): Record<string, unknown> {
-    const raw = (fieldTree as any)().value() as Record<string, unknown>;
-    const result: Record<string, unknown> = {};
-
-    for (const field of config) {
-      const ft = (fieldTree as any)[field.field];
-      if (!ft || ft().hidden()) continue;
-      result[field.field] = raw[field.field];
-    }
-
-    return result;
-  }
 }

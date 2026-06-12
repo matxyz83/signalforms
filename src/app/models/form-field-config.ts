@@ -227,6 +227,13 @@ export interface FormFieldConfig {
    * Utile per campi tecnici come l'ID del record in modalità edit.
    */
   showInForm?: boolean;
+  /**
+   * Rende il campo non modificabile dall'utente.
+   * `true` → sempre disabilitato.
+   * `(values: T) => boolean` → disabilitato condizionalmente in base ai valori del form.
+   * Il valore è sempre incluso nel payload serializzato.
+   */
+  disabled?: boolean | ((values: Record<string, unknown>) => boolean);
   /** Configurazione della dialog di lookup (solo per FieldType.Lookup) */
   lookupConfig?: LookupConfig;
 }

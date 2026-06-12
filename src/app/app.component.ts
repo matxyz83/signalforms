@@ -239,9 +239,9 @@ export class AppComponent {
     if (this.currentId() === item.id) this.showForm.set(false);
   }
 
-  onFormSubmit(payload: Record<string, unknown>): void {
+  onFormSubmit(payload: PersonFormView): void {
     // fromView converte PersonFormView → PersonForm (weekday: FieldOption → number).
-    const person = AppComponent.fromView(payload as unknown as PersonFormView);
+    const person = AppComponent.fromView(payload);
     if (this.isNew()) {
       const nextId = Math.max(0, ...this.people().map(p => p.id ?? 0)) + 1;
       const created = { ...person, id: nextId };
@@ -320,6 +320,7 @@ export class AppComponent {
           { type: ValidatorType.Min, value: 18, message: 'Devi avere almeno 18 anni' },
           { type: ValidatorType.Max, value: 120 },
         ],
+        disabled: (v) => v["email"] == "mario.rossi@esempio.it" && !this.isNew()
       },
       {
         type: FieldType.Select, field: 'tipo', label: 'fields.tipo.label',

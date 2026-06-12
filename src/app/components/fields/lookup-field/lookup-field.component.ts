@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { Component, computed, inject, input, signal, Signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { catchError, debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { of, Subject } from 'rxjs';
@@ -122,10 +122,12 @@ export class LookupDialogComponent {
   styleUrl: './lookup-field.component.scss',
 })
 export class LookupFieldComponent {
-  readonly control = input.required<FieldTree<unknown>>();
-  readonly config  = input.required<FormFieldConfig>();
+  readonly control     = input.required<FieldTree<unknown>>();
+  readonly config      = input.required<FormFieldConfig>();
+  readonly disabledSig = input<Signal<boolean>>(signal(false));
 
-  readonly state = computed(() => this.control()());
+  readonly state      = computed(() => this.control()());
+  readonly isDisabled = computed(() => this.disabledSig()());
 
   readonly displayValue = computed(() => {
     const v = this.state().value() as FieldOption | null;

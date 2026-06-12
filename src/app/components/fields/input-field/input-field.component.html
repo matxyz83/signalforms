@@ -9,6 +9,7 @@
       (blur)="state().markAsTouched()"
       [placeholder]="(config().placeholder ?? '') | transloco"
       [class.k-invalid]="showError()"
+      [disabled]="isDisabled()"
       [spinners]="false"
       [format]="'#'"
     />
@@ -21,6 +22,7 @@
       (blur)="state().markAsTouched()"
       [placeholder]="(config().placeholder ?? '') | transloco"
       [class.k-invalid]="showError()"
+      [disabled]="isDisabled()"
     />
   }
 
