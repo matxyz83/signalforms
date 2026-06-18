@@ -15,6 +15,7 @@ export class FormDialogComponent {
   readonly title       = input<string>('');
   readonly formId      = input<string>('form-wrapper');
   readonly submitLabel = input<string>('Salva');
+  readonly width    = input<number>(580);
 
   readonly cancel = output<void>();
 }

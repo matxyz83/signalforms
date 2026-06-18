@@ -354,6 +354,7 @@ export class AppComponent {
         type: FieldType.Textarea, field: 'note', label: 'fields.note.label',
         placeholder: 'fields.note.placeholder',
         validators: [{ type: ValidatorType.MaxLength, value: 500 }],
+        colSpan: 2,
       },
       {
         type: FieldType.Date, field: 'dataNascita', label: 'fields.dataNascita.label',
@@ -381,7 +382,7 @@ export class AppComponent {
       },
       {
         type: FieldType.Combobox, field: 'interessi', label: 'fields.interessi.label',
-        placeholder: 'fields.interessi.placeholder', multiple: true,
+        placeholder: 'fields.interessi.placeholder', multiple: true, colSpan: 2,
         options: [
           { value: 'sport',      label: 'Sport' },
           { value: 'musica',     label: 'Musica' },
@@ -405,7 +406,7 @@ export class AppComponent {
         validators: [{ type: ValidatorType.Required }],
       },
       {
-        type: FieldType.Array, field: 'contatti', label: 'fields.contatti.label',
+        type: FieldType.Array, field: 'contatti', label: 'fields.contatti.label', colSpan: 2,
         arrayConfig: [
           {
             type: FieldType.Input, field: 'nome', label: 'fields.contatti.nome.label',

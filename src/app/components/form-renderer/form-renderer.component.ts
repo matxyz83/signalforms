@@ -33,10 +33,12 @@ const FIELD_COMPONENTS: Record<FieldType, Type<unknown>> = {
   styleUrl: './form-renderer.component.scss',
 })
 export class FormRendererComponent<T> {
-  readonly config = input.required<FormFieldConfig[]>();
+  readonly config   = input.required<FormFieldConfig[]>();
   /** Accettato come unknown per compatibilità con qualsiasi FieldTree<T> */
-  readonly form   = input.required<FieldTree<T>>();
-  readonly formId = input<string>('form-renderer');
+  readonly form     = input.required<FieldTree<T>>();
+  readonly formId   = input<string>('form-renderer');
+  /** Numero di colonne del layout grid. Default 1 (singola colonna, comportamento invariato). */
+  readonly columns  = input<number>(1);
   readonly formSubmit = output<T>();
 
   /**

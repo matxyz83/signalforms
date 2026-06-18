@@ -236,4 +236,10 @@ export interface FormFieldConfig {
   disabled?: boolean | ((values: Record<string, unknown>) => boolean);
   /** Configurazione della dialog di lookup (solo per FieldType.Lookup) */
   lookupConfig?: LookupConfig;
+  /**
+   * Numero di colonne che il campo occupa nel layout grid del form.
+   * Richiede che `FormRendererComponent` riceva `[columns]` > 1.
+   * Default `1`. Usare `colSpan` uguale al numero di colonne del form per occupare tutta la larghezza.
+   */
+  colSpan?: number;
 }

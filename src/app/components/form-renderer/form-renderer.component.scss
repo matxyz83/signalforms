@@ -3,14 +3,14 @@
 }
 
 .form {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(var(--form-columns, 1), 1fr);
   gap: 16px;
   padding: 10px;
 }
 
 .form-field-wrapper {
-  width: 100%;
+  min-width: 0; // evita overflow in celle grid con contenuto lungo
 }
 
 .form-errors {
