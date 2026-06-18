@@ -111,8 +111,10 @@ export class FormRendererComponent<T> {
           const inputs: Record<string, unknown> = {
             control: this.fieldTreeCache().get(f.field)!,
             config: f,
-            disabledSig: this.disabledSignals().get(f.field)!,
           };
+          if (f.type !== FieldType.Array) {
+            inputs['disabledSig'] = this.disabledSignals().get(f.field)!;
+          }
           if (f.type === FieldType.Select || f.type === FieldType.Combobox) {
             inputs['formValues'] = this.formValuesSignal;
           }

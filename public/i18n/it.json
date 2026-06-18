@@ -112,6 +112,9 @@
       "ruolo": {
         "label": "Ruolo"
       }
+    },
+    "dynamic":{
+      "level": "Livello"
     }
   },
   "columns": {

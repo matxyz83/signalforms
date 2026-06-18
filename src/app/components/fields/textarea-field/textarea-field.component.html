@@ -9,7 +9,7 @@
     (input)="onInput($event)"
     (blur)="state().markAsTouched()"
     [class.k-invalid]="showError()"
-    [readonly]="isDisabled()"
+    [disabled]="isDisabled()"
     rows="4"
   ></textarea>
   @if (showError()) {

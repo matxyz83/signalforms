@@ -2,7 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { process, State } from '@progress/kendo-data-query';
 import {
   DynamicFieldConfig, DynamicGridColumnConfig,
-  FieldOption, FieldType, FormFieldConfig, GridColumnConfig, ValidatorType,
+  FieldType, FormFieldConfig, GridColumnConfig, ValidatorType,
 } from '../../models/form-field-config';
 import { DynamicFormService } from '../../services/dynamic-form.service';
 import { FormEngineService } from '../../services/form-engine.service';
@@ -17,72 +17,77 @@ interface MemberEntity {
   data: string;
 }
 
-/** Modello form/grid: `data` espanso in campi flat */
-type MemberView = Omit<MemberEntity, 'data'> & {
-  livello: FieldOption | null;
-  priorita: number | null;
-  notifiche: boolean;
-};
+// ─── Simulazione risposta API/DB ─────────────────────────────────────────────
+// In produzione: http.get<ApiSchema>('/api/member-schema')
+// Il frontend non conosce i nomi né i tipi dei campi dinamici.
 
-// ─── Config dinamica (simulazione risposta API/DB) ───────────────────────────
+const API_SCHEMA_JSON = `{
+  "formColumns": 2,
+  "fields": [
+    {
+      "type": "select",
+      "field": "livello",
+      "label": "fields.dynamic.level",
+      "options": [
+        { "value": "bronzo", "label": "Bronzo" },
+        { "value": "argento", "label": "Argento" },
+        { "value": "oro",     "label": "Oro" }
+      ],
+      "validators": [{ "type": "required" }],
+      "colSpan": 2
+    },
+    {
+      "type": "input",
+      "field": "priorita",
+      "label": "Priorità (1–10)",
+      "inputType": "number",
+      "defaultValue": null,
+      "visibleWhen": { "field": "livello", "operator": "eq", "value": "oro" },
+      "validators": [
+        { "type": "required" },
+        { "type": "min", "value": 1 },
+        { "type": "max", "value": 10 }
+      ]
+    },
+    {
+      "type": "checkbox",
+      "field": "notifiche",
+      "label": "Abilita notifiche email",
+      "defaultValue": false
+    }
+  ],
+  "gridColumns": [
+    {
+      "field": "livello",
+      "title": "fields.dynamic.level",
+      "width": 120,
+      "filter": "combobox",
+      "display": "option",
+      "filterOptions": [
+        { "value": "bronzo", "label": "Bronzo" },
+        { "value": "argento", "label": "Argento" },
+        { "value": "oro",     "label": "Oro" }
+      ]
+    },
+    {
+      "field": "notifiche",
+      "title": "Notifiche",
+      "width": 100,
+      "display": "boolean",
+      "filterable": false,
+      "sortable": false
+    }
+  ]
+}`;
 
-const DYNAMIC_FIELDS: DynamicFieldConfig[] = [
-  {
-    type: FieldType.Select,
-    field: 'livello',
-    label: 'Livello abbonamento',
-    options: [
-      { value: 'bronzo', label: 'Bronzo' },
-      { value: 'argento', label: 'Argento' },
-      { value: 'oro', label: 'Oro' },
-    ],
-    validators: [{ type: ValidatorType.Required }],
-  },
-  {
-    type: FieldType.Input,
-    field: 'priorita',
-    label: 'Priorità (1–10)',
-    inputType: 'number',
-    defaultValue: null,
-    // Regola dichiarativa: visibile solo se livello === 'oro'
-    // DynamicFormService.toFormConfig() la converte in lambda visibleWhen
-    visibleWhen: { field: 'livello', operator: 'eq', value: 'oro' },
-    validators: [
-      { type: ValidatorType.Required },
-      { type: ValidatorType.Min, value: 1 },
-      { type: ValidatorType.Max, value: 10 },
-    ],
-  },
-  {
-    type: FieldType.Checkbox,
-    field: 'notifiche',
-    label: 'Abilita notifiche email',
-    defaultValue: false,
-  },
-];
+interface ApiSchema {
+  formColumns:  number;
+  fields:       DynamicFieldConfig[];
+  gridColumns:  DynamicGridColumnConfig[];
+}
 
-const DYNAMIC_COLUMNS: DynamicGridColumnConfig[] = [
-  {
-    field: 'livello',
-    title: 'Livello',
-    width: 120,
-    filter: 'combobox',
-    display: 'option',
-    filterOptions: [
-      { value: 'bronzo', label: 'Bronzo' },
-      { value: 'argento', label: 'Argento' },
-      { value: 'oro', label: 'Oro' },
-    ],
-  },
-  {
-    field: 'notifiche',
-    title: 'Notifiche',
-    width: 100,
-    display: 'boolean',
-    filterable: false,
-    sortable: false,
-  },
-];
+const { formColumns: FORM_COLUMNS, fields: DYNAMIC_FIELDS, gridColumns: DYNAMIC_COLUMNS } =
+  JSON.parse(API_SCHEMA_JSON) as ApiSchema;
 
 // ─── Config statica (a codice) ───────────────────────────────────────────────
 
@@ -132,6 +137,8 @@ export class DynamicFormExampleComponent {
   private readonly engine     = inject(FormEngineService);
   private readonly dynService = inject(DynamicFormService);
 
+  readonly formColumns = FORM_COLUMNS;
+
   // Config form completa: statica + dinamica convertita
   readonly fullFormConfig: FormFieldConfig[] = [
     ...STATIC_FORM_CONFIG,
@@ -147,14 +154,14 @@ export class DynamicFormExampleComponent {
   readonly members   = signal<MemberEntity[]>(SAMPLE_MEMBERS);
   readonly gridState = signal<State>({ filter: { filters: [], logic: 'and' } });
 
-  readonly gridData = computed<TypedGridResult<MemberView>>(() =>
+  readonly gridData = computed<TypedGridResult<Record<string, unknown>>>(() =>
     process(
-      this.members().map(m => this.toView(m)) as unknown as Record<string, unknown>[],
+      this.members().map(m => this.toView(m)),
       this.gridState(),
-    ) as TypedGridResult<MemberView>
+    ) as TypedGridResult<Record<string, unknown>>
   );
 
-  readonly formModel = signal<MemberView>(this.emptyView());
+  readonly formModel = signal<Record<string, unknown>>(this.emptyView());
   readonly form      = this.engine.buildForm(this.formModel, this.fullFormConfig);
 
   readonly showForm  = signal(false);
@@ -164,8 +171,8 @@ export class DynamicFormExampleComponent {
   showConfigJson = false;
   lastPayload: string | null = null;
 
-  /** Config JSON visualizzata nel pannello "Mostra config" */
-  readonly dynConfigJson = JSON.stringify(DYNAMIC_FIELDS, null, 2);
+  /** JSON grezzo ricevuto dall'"API" — mostrato nel pannello di debug */
+  readonly dynConfigJson = API_SCHEMA_JSON;
 
   onGridStateChange(state: State): void {
     this.gridState.set(state);
@@ -178,18 +185,19 @@ export class DynamicFormExampleComponent {
     this.showForm.set(true);
   }
 
-  onEditClick(item: MemberView): void {
+  onEditClick(item: Record<string, unknown>): void {
     this.formModel.set(item);
     this.isNew.set(false);
-    this.currentId.set(item.id);
+    this.currentId.set(item['id'] as number | null);
     this.showForm.set(true);
   }
 
-  onDeleteClick(item: MemberView): void {
-    this.members.update(list => list.filter(m => m.id !== item.id));
+  onDeleteClick(item: Record<string, unknown>): void {
+    this.members.update(list => list.filter(m => m.id !== item['id']));
   }
 
   onFormSubmit(payload: Record<string, unknown>): void {
+    debugger;
     // collapsePayload ricollassa i campi dinamici flat nel campo data: string
     const entity = this.dynService.collapsePayload(payload, DYNAMIC_FIELDS) as unknown as MemberEntity;
     this.lastPayload = JSON.stringify(entity, null, 2);
@@ -208,19 +216,11 @@ export class DynamicFormExampleComponent {
   }
 
   /** Espande data: string → campi flat per grid e form */
-  private toView(m: MemberEntity): MemberView {
-    const dyn = this.dynService.parseData(m.data, DYNAMIC_FIELDS);
-    return {
-      id:        m.id,
-      nome:      m.nome,
-      livello:   dyn['livello']   as FieldOption | null,
-      priorita:  dyn['priorita']  as number | null,
-      notifiche: (dyn['notifiche'] as boolean) ?? false,
-    };
+  private toView(m: MemberEntity): Record<string, unknown> {
+    return { id: m.id, nome: m.nome, ...this.dynService.parseData(m.data, DYNAMIC_FIELDS) };
   }
 
-  private emptyView(): MemberView {
-    const dyn = this.dynService.parseData(null, DYNAMIC_FIELDS);
-    return { id: null, nome: '', ...dyn } as MemberView;
+  private emptyView(): Record<string, unknown> {
+    return { id: null, nome: '', ...this.dynService.parseData(null, DYNAMIC_FIELDS) };
   }
 }

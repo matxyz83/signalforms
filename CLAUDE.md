@@ -68,6 +68,7 @@ type OptionsLoader = FieldOption[] | Observable<FieldOption[]> | ((state: Record
 | `format` | `string?` | Formato di visualizzazione per i picker data/ora (es. `'dd/MM/yyyy HH:mm:ss'`). Sovrascrive il default del tipo. |
 | `arrayConfig` | `FormFieldConfig[]` | Sotto-configurazione dei campi di ogni riga (solo `FieldType.Array`) |
 | `defaultValue` | `unknown` | Valore di default per ogni nuovo item array (`buildDefaultItem` lo usa; fallback su `defaultForType`) |
+| `colSpan` | `number?` | Numero di colonne occupate nel layout grid del renderer (default `1`). Richiede `[columns]` > 1 su `FormRendererComponent`. Usare il valore uguale a `columns` per occupare tutta la larghezza (es. `Textarea`, `Array`). |
 
 > `resolveOption` è stato **eliminato** — i valori combobox/select sono ora `FieldOption` completi, il label viaggia con il valore.
 
@@ -152,6 +153,17 @@ File: `form-renderer.component.{ts,html,scss}`
 - `fieldFor(field)` → `(form as any)[field.field]` per accesso dinamico al `FieldTree` del campo
 - Visibilità nel template: `@if (!fieldFor(field)().hidden())`
 - **`formValuesSignal`** — `computed()` che legge `ft().value()` di ogni campo; il riferimento è stabile (passato come signal, non come valore) → `inputsCache` non si invalida ad ogni digitazione. Passato solo a `Select` e `Combobox` field (gli unici che dichiarano `formValues` input).
+- **`columns`** — `input<number>(1)`; controlla il numero di colonne del layout CSS Grid tramite la custom property `--form-columns`. Default `1` (singola colonna, comportamento invariato). Usare insieme a `colSpan` nei campi per il layout multi-colonna:
+
+```html
+<app-form-renderer [columns]="2" [config]="formConfig" [form]="form" (formSubmit)="..." />
+```
+
+```typescript
+// Nella form config — campi che occupano tutta la larghezza in layout a 2 colonne
+{ type: FieldType.Textarea, field: 'note',     label: '...', colSpan: 2 }
+{ type: FieldType.Array,    field: 'contatti', label: '...', colSpan: 2 }
+```
 
 ### Form Dialog (`src/app/components/form-dialog/`)
 
@@ -165,7 +177,14 @@ File: `form-dialog.component.{ts,html,scss}`
 </app-form-dialog>
 ```
 
-Input: `open`, `title`, `formId`, `submitLabel`. Output: `cancel`. Il `formId` va passato identico a dialog e renderer per collegare il pulsante submit al `<form>`.
+Input: `open`, `title`, `formId`, `submitLabel`, `width`. Output: `cancel`. Il `formId` va passato identico a dialog e renderer per collegare il pulsante submit al `<form>`.
+
+- **`width`** — larghezza della dialog in px (default `580`). `minWidth` è fisso a `320`. Aumentare per form a più colonne:
+  ```html
+  <app-form-dialog [width]="860" ...>
+    <app-form-renderer [columns]="2" ... />
+  </app-form-dialog>
+  ```
 
 - `title` e `submitLabel` sono stringhe plain (non chiavi Transloco) — il parent è responsabile di passare il testo già localizzato.
 - Solo `form.cancel` (bottone Annulla) è tradotto internamente con `| transloco`.

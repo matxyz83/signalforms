@@ -50,7 +50,7 @@
         (filterChange)="onFilterChange($event)"
         [loading]="loading()"
         [class.k-invalid]="showError()"
-        [readonly]="isDisabled()"
+        [disabled]="isDisabled()"
       />
     } @else {
       <kendo-combobox
@@ -65,7 +65,7 @@
         [filterable]="true"
         [class.k-invalid]="showError()"
         [loading]="loading()"
-        [readonly]="isDisabled()"
+        [disabled]="isDisabled()"
       />
     }
   }
