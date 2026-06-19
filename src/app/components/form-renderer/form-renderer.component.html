@@ -1,7 +1,7 @@
 <form [id]="formId()" class="form" (submit)="onSubmit($event)" novalidate [style.--form-columns]="columns()">
   @for (field of config(); track field.field) {
-    @if (field.showInForm !== false && !fieldFor(field)().hidden()) {
-      <div class="form-field-wrapper" [style.grid-column]="'span ' + (field.colSpan ?? 1)">
+    @if (field.showInForm !== false && !fieldFor(field)?.()?.hidden()) {
+      <div class="form-field-wrapper" [style.grid-column]="field.colStart ? field.colStart + ' / span ' + (field.colSpan ?? 1) : 'span ' + (field.colSpan ?? 1)">
         <ng-container
           [ngComponentOutlet]="componentFor(field)"
           [ngComponentOutletInputs]="inputsFor(field)"

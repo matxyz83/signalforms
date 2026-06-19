@@ -14,6 +14,7 @@ import { FormDialogComponent } from './components/form-dialog/form-dialog.compon
 import { GridRendererComponent, TypedGridResult } from './components/grid-renderer/grid-renderer.component';
 import { DynamicFormExampleComponent } from './components/dynamic-form-example/dynamic-form-example.component';
 import { LookupExampleComponent } from './components/lookup-example/lookup-example.component';
+import { NestedArrayExampleComponent } from './components/nested-array-example/nested-array-example.component';
 
 interface ContattoForm {
   nome: string;
@@ -118,7 +119,7 @@ function weekdaysForLocale(locale: string): FieldOption[] {
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [KENDO_DIALOGS, GridRendererComponent, FormDialogComponent, FormRendererComponent, DynamicFormExampleComponent, LookupExampleComponent],
+  imports: [KENDO_DIALOGS, GridRendererComponent, FormDialogComponent, FormRendererComponent, DynamicFormExampleComponent, LookupExampleComponent, NestedArrayExampleComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
 })

@@ -242,4 +242,17 @@ export interface FormFieldConfig {
    * Default `1`. Usare `colSpan` uguale al numero di colonne del form per occupare tutta la larghezza.
    */
   colSpan?: number;
+  /**
+   * Controlla se l'utente può aggiungere o rimuovere righe in un campo Array.
+   * Default `true`. `false` → lista a struttura fissa: nessun pulsante Aggiungi né Rimuovi.
+   */
+  mutable?: boolean;
+  /**
+   * Colonna di partenza nel layout grid (1-based, come `grid-column-start` CSS).
+   * Se omesso il campo segue il flusso automatico della grid.
+   * Combinato con `colSpan` genera `grid-column: <colStart> / span <colSpan>`.
+   * Esempio Bootstrap-like con `columns=12`: `colStart: 3, colSpan: 5` → occupa le colonne 3–7,
+   * lasciando 2 slot vuoti prima e 5 dopo.
+   */
+  colStart?: number;
 }

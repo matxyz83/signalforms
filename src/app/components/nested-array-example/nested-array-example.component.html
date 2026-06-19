@@ -1,0 +1,33 @@
+<section class="example">
+  <div class="example-header">
+    <div>
+      <h2>Array annidati</h2>
+      <p class="desc">
+        Il campo <em>Categorie</em> contiene solo un sotto-array <em>Voci</em> —
+        nessun campo foglia al primo livello.
+        Ogni voce ha <code>descrizione</code> e <code>importo</code>.
+        <code>mutable: false</code> su <em>Categorie</em> — le righe si visualizzano
+        ma non si aggiungono né rimuovono. <code>mutable: true</code> (default) su <em>Voci</em>.
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <app-form-renderer
+      formId="preventivo-form"
+      [config]="formConfig"
+      [form]="form"
+      (formSubmit)="onSubmit($event)"
+    />
+    <div class="form-actions">
+      <button class="btn-submit" type="submit" form="preventivo-form">Salva preventivo</button>
+    </div>
+  </div>
+
+  @if (lastPayload) {
+    <div class="card payload-card">
+      <h3>Payload</h3>
+      <pre>{{ lastPayload }}</pre>
+    </div>
+  }
+</section>

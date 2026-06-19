@@ -23,6 +23,12 @@
   @case (FieldType.Time) {
     <app-date-field [control]="controlFor()" [config]="fieldConfig()" />
   }
+  @case (FieldType.Array) {
+    <ng-container
+      [ngComponentOutlet]="arrayFieldCmp()!"
+      [ngComponentOutletInputs]="nestedArrayInputs()"
+    />
+  }
   @default {
     <app-input-field [control]="controlFor()" [config]="fieldConfig()" />
   }

@@ -69,6 +69,7 @@ type OptionsLoader = FieldOption[] | Observable<FieldOption[]> | ((state: Record
 | `arrayConfig` | `FormFieldConfig[]` | Sotto-configurazione dei campi di ogni riga (solo `FieldType.Array`) |
 | `defaultValue` | `unknown` | Valore di default per ogni nuovo item array (`buildDefaultItem` lo usa; fallback su `defaultForType`) |
 | `colSpan` | `number?` | Numero di colonne occupate nel layout grid del renderer (default `1`). Richiede `[columns]` > 1 su `FormRendererComponent`. Usare il valore uguale a `columns` per occupare tutta la larghezza (es. `Textarea`, `Array`). |
+| `colStart` | `number?` | Colonna di partenza 1-based (`grid-column-start` CSS). Se omesso il campo segue il flusso automatico. Combinato con `colSpan` genera `grid-column: <colStart> / span <colSpan>`. Esempio Bootstrap-like con `columns=12`: `colStart: 3, colSpan: 5` → colonne 3–7, 2 slot vuoti prima e 5 dopo. |
 
 > `resolveOption` è stato **eliminato** — i valori combobox/select sono ora `FieldOption` completi, il label viaggia con il valore.
 
@@ -163,6 +164,10 @@ File: `form-renderer.component.{ts,html,scss}`
 // Nella form config — campi che occupano tutta la larghezza in layout a 2 colonne
 { type: FieldType.Textarea, field: 'note',     label: '...', colSpan: 2 }
 { type: FieldType.Array,    field: 'contatti', label: '...', colSpan: 2 }
+
+// Layout Bootstrap-like con columns=12: campo centrato (colonne 3–7, 5 slot)
+{ type: FieldType.Input, field: 'codice', label: '...', colStart: 3, colSpan: 5 }
+// → genera grid-column: 3 / span 5; i 4 slot rimanenti dopo restano vuoti
 ```
 
 ### Form Dialog (`src/app/components/form-dialog/`)

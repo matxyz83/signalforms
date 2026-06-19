@@ -1,23 +1,29 @@
 <div class="array-field">
   <div class="array-header">
     <span class="array-label">{{ config().label }}</span>
-    <button kendoButton themeColor="primary" type="button" (click)="addRow()">
-      + Aggiungi riga
-    </button>
+    @if (isMutable()) {
+      <button kendoButton [svgIcon]="iconAdd" themeColor="primary" type="button" (click)="addRow()"></button>
+    }
   </div>
 
   @for (i of indices(); track i) {
     <div class="array-row">
       <div class="row-fields">
         @for (field of config().arrayConfig ?? []; track field.field) {
-          <app-row-renderer [form]="itemFieldFor(i)" [fieldConfig]="field" />
+          <app-row-renderer
+            [form]="itemFieldFor(i)"
+            [fieldConfig]="field"
+            [arrayFieldCmp]="ArrayFieldRef"
+          />
         }
       </div>
-      <button
-        kendoButton themeColor="error" fillMode="outline" type="button"
-        (click)="removeRow(i)"
-        class="remove-btn"
-      >✕</button>
+      @if (isMutable()) {
+        <button
+          kendoButton [svgIcon]="iconRemove" themeColor="error" fillMode="outline" type="button"
+          (click)="removeRow(i)"
+          class="remove-btn"
+        ></button>
+      }
     </div>
   }
 </div>

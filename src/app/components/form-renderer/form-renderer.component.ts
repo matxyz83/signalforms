@@ -127,8 +127,11 @@ export class FormRendererComponent<T> {
     return FIELD_COMPONENTS[field.type] ?? InputFieldComponent;
   }
 
-  fieldFor(field: FormFieldConfig): FieldTree<unknown> {
-    return this.fieldTreeCache().get(field.field)!;
+  fieldFor(field: FormFieldConfig): FieldTree<unknown> | undefined {
+    const fieldTree = this.fieldTreeCache().get(field.field);
+    if(!fieldTree)
+      console.debug(`${field.field} not exists`);
+    return fieldTree;
   }
 
   inputsFor(field: FormFieldConfig): Record<string, unknown> {

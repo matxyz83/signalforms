@@ -1,0 +1,79 @@
+:host { display: block; }
+
+.example {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.example-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+h2 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin: 0 0 6px;
+}
+
+.desc {
+  color: #666;
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 0;
+  max-width: 720px;
+
+  code {
+    background: #f0f0f8;
+    color: #5b6abf;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 12px;
+  }
+}
+
+.card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+}
+
+.form-actions {
+  padding: 8px 10px 0;
+}
+
+.btn-submit {
+  padding: 8px 20px;
+  background: #5b6abf;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover { background: #4a58a8; }
+}
+
+.payload-card {
+  h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: #444;
+    margin: 0 0 12px;
+  }
+
+  pre {
+    background: #1a1a2e;
+    color: #a9ffa9;
+    padding: 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    overflow-x: auto;
+    margin: 0;
+  }
+}
