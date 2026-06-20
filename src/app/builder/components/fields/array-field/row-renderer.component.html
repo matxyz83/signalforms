@@ -1,35 +1,35 @@
+@if(controlFor()) {
+  @let control = controlFor()!;
 @switch (fieldConfig().type) {
-  @case (FieldType.Input) {
-    <app-input-field [control]="controlFor()" [config]="fieldConfig()" />
-  }
-  @case (FieldType.Textarea) {
-    <app-textarea-field [control]="controlFor()" [config]="fieldConfig()" />
-  }
-  @case (FieldType.Checkbox) {
-    <app-checkbox-field [control]="controlFor()" [config]="fieldConfig()" />
-  }
-  @case (FieldType.Select) {
-    <app-select-field [control]="controlFor()" [config]="fieldConfig()" />
-  }
-  @case (FieldType.Combobox) {
-    <app-combobox-field [control]="controlFor()" [config]="fieldConfig()" />
-  }
-  @case (FieldType.Date) {
-    <app-date-field [control]="controlFor()" [config]="fieldConfig()" />
-  }
-  @case (FieldType.DateTime) {
-    <app-date-field [control]="controlFor()" [config]="fieldConfig()" />
-  }
-  @case (FieldType.Time) {
-    <app-date-field [control]="controlFor()" [config]="fieldConfig()" />
-  }
-  @case (FieldType.Array) {
-    <ng-container
-      [ngComponentOutlet]="arrayFieldCmp()!"
-      [ngComponentOutletInputs]="nestedArrayInputs()"
-    />
-  }
-  @default {
-    <app-input-field [control]="controlFor()" [config]="fieldConfig()" />
-  }
+@case (FieldType.Input) {
+<app-input-field [control]="control" [config]="fieldConfig()" />
+}
+@case (FieldType.Textarea) {
+<app-textarea-field [control]="control" [config]="fieldConfig()" />
+}
+@case (FieldType.Checkbox) {
+<app-checkbox-field [control]="control" [config]="fieldConfig()" />
+}
+@case (FieldType.Select) {
+<app-select-field [control]="control" [config]="fieldConfig()" />
+}
+@case (FieldType.Combobox) {
+<app-combobox-field [control]="control" [config]="fieldConfig()" />
+}
+@case (FieldType.Date) {
+<app-date-field [control]="control" [config]="fieldConfig()" />
+}
+@case (FieldType.DateTime) {
+<app-date-field [control]="control" [config]="fieldConfig()" />
+}
+@case (FieldType.Time) {
+<app-date-field [control]="control" [config]="fieldConfig()" />
+}
+@case (FieldType.Array) {
+<ng-container [ngComponentOutlet]="arrayFieldCmp()!" [ngComponentOutletInputs]="nestedArrayInputs()" />
+}
+@default {
+<app-input-field [control]="control" [config]="fieldConfig()" />
+}
+}
 }

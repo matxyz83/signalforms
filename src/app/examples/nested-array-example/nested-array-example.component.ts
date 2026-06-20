@@ -54,7 +54,7 @@ export class NestedArrayExampleComponent {
               validators: [{ type: ValidatorType.Required }],
             },
             {
-              type: FieldType.Input, field: 'importo', label: 'Importo (â‚¬)',
+              type: FieldType.Input, field: 'importo', label: 'Importo (€)',
               inputType: 'number',
             },
           ],

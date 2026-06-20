@@ -1,6 +1,6 @@
 import { Component, computed, inject, input, signal, Signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { catchError, debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
+import { catchError, debounceTime, distinctUntilChanged, filter, switchMap, take } from 'rxjs/operators';
 import { of, Subject } from 'rxjs';
 import { GridModule } from '@progress/kendo-angular-grid';
 import { DialogCloseResult, DialogRef, DialogService } from '@progress/kendo-angular-dialog';
@@ -8,10 +8,13 @@ import { InputsModule } from '@progress/kendo-angular-inputs';
 import { ButtonsModule } from '@progress/kendo-angular-buttons';
 import { LabelModule } from '@progress/kendo-angular-label';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { searchIcon, xIcon, SVGIcon } from '@progress/kendo-svg-icons';
+import { plusIcon, searchIcon, xIcon, SVGIcon } from '@progress/kendo-svg-icons';
 import { FieldTree } from '@angular/forms/signals';
 import { FieldOption, FormFieldConfig, LookupConfig } from '../../../models/form-field-config';
 import { firstErrorInfo } from '../../../utils/field-error';
+
+/** Sentinel emesso da LookupDialogComponent quando l'utente vuole creare un nuovo elemento. */
+const LOOKUP_CREATE_KEY = '__lookup_create__';
 
 // ── Dialog content ─────────────────────────────────────────────────────────
 // Aperto tramite DialogService: viene creato a body-level, fuori dalla
@@ -29,7 +32,14 @@ import { firstErrorInfo } from '../../../utils/field-error';
         [placeholder]="(lookupConfig.searchPlaceholder ?? 'lookup.searchPlaceholder') | transloco"
         (valueChange)="onSearch($event)"
       />
+      @if (lookupConfig.createFn) {
+        <button kendoButton [svgIcon]="plusIcon" themeColor="primary" type="button"
+                [title]="(lookupConfig.createLabel ?? 'lookup.createNew') | transloco"
+                (click)="requestCreate()">
+        </button>
+      }
     </div>
+
     <kendo-grid [data]="results()" [pageable]="false" [filterable]="false" [sortable]="false"
       class="ld-grid">
       @for (col of lookupConfig.columns; track col.field) {
@@ -41,18 +51,19 @@ import { firstErrorInfo } from '../../../utils/field-error';
         </ng-template>
       </kendo-grid-command-column>
     </kendo-grid>
-    @if (!loading() && results().length === 0 && searchTerm().length >= (lookupConfig.minSearchLength ?? 1)) {
-      <p class="ld-empty">{{ 'lookup.noResults' | transloco }}</p>
-    }
+
     <div class="ld-footer">
       <button kendoButton type="button" (click)="cancel()">{{ 'form.cancel' | transloco }}</button>
     </div>
   `,
   styles: [`
     :host { display: block; }
-    .ld-search { padding: 12px; border-bottom: 1px solid var(--kendo-color-border, #e0e0e0); }
-    .ld-grid  { max-height: 340px; }
-    .ld-empty { text-align: center; color: #888; padding: 16px; margin: 0; font-size: 13px; }
+    .ld-search {
+      display: flex; gap: 8px; align-items: center;
+      padding: 12px; border-bottom: 1px solid var(--kendo-color-border, #e0e0e0);
+    }
+    .ld-search kendo-textbox { flex: 1; }
+    .ld-grid { max-height: 340px; }
     .ld-footer {
       display: flex; justify-content: flex-end;
       padding: 8px 12px; border-top: 1px solid var(--kendo-color-border, #e0e0e0);
@@ -63,7 +74,9 @@ export class LookupDialogComponent {
   /** Impostato dal parent subito dopo dialogService.open() */
   lookupConfig!: LookupConfig;
 
-  private readonly dialogRef  = inject(DialogRef);
+  private readonly dialogRef = inject(DialogRef);
+
+  readonly plusIcon: SVGIcon = plusIcon;
 
   readonly searchTerm = signal('');
   readonly results    = signal<Record<string, unknown>[]>([]);
@@ -105,6 +118,11 @@ export class LookupDialogComponent {
       label: String(row[this.lookupConfig.labelField] ?? ''),
     };
     this.dialogRef.close(option);
+  }
+
+  /** Chiude il dialog con un sentinel; LookupFieldComponent chiamerà createFn dopo la chiusura. */
+  requestCreate(): void {
+    this.dialogRef.close({ [LOOKUP_CREATE_KEY]: this.searchTerm() });
   }
 
   cancel(): void {
@@ -158,16 +176,34 @@ export class LookupFieldComponent {
 
     ref.result.subscribe(result => {
       if (result instanceof DialogCloseResult || result === null) return;
-      const s = this.state();
-      s.value.set(result as unknown as FieldOption);
-      s.markAsDirty();
-      s.markAsTouched();
+
+      const r = result as unknown as Record<string, unknown>;
+
+      // Sentinel: l'utente vuole creare un nuovo elemento.
+      // Il lookup dialog è già chiuso → createFn può aprire qualsiasi UI senza z-index issues.
+      if (LOOKUP_CREATE_KEY in r) {
+        const term = r[LOOKUP_CREATE_KEY] as string;
+        cfg.createFn?.(term).pipe(
+          filter((opt): opt is FieldOption => opt !== null),
+          take(1),
+        ).subscribe(opt => this.applyValue(opt));
+        return;
+      }
+
+      this.applyValue(result as unknown as FieldOption);
     });
   }
 
   clear(): void {
     const s = this.state();
     s.value.set(null);
+    s.markAsDirty();
+    s.markAsTouched();
+  }
+
+  private applyValue(opt: FieldOption): void {
+    const s = this.state();
+    s.value.set(opt);
     s.markAsDirty();
     s.markAsTouched();
   }

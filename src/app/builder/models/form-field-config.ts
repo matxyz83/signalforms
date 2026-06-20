@@ -138,6 +138,17 @@ export interface LookupConfig {
   searchFn: (term: string) => Observable<Record<string, unknown>[]>;
   /** Colonne mostrate nella griglia di risultati */
   columns: LookupColumnConfig[];
+  /**
+   * Se fornita, mostra un pulsante "Crea nuovo" (solo icona) accanto alla ricerca.
+   * Il click chiude il lookup dialog e delega la creazione al parent:
+   * `createFn` riceve il termine di ricerca corrente e deve restituire un Observable
+   * che emette il nuovo FieldOption (o null se l'utente annulla).
+   * Poiché il lookup dialog è già chiuso quando `createFn` viene chiamata, il parent
+   * può aprire qualsiasi UI (dialog, pannello, navigazione) senza problemi di z-index.
+   */
+  createFn?: (term: string) => Observable<FieldOption | null>;
+  /** Chiave Transloco per il tooltip del pulsante "Crea nuovo" (default: 'lookup.createNew') */
+  createLabel?: string;
 }
 
 /**

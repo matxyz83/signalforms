@@ -147,6 +147,8 @@
     "open": "Apri ricerca",
     "clear": "Rimuovi selezione",
     "select": "Seleziona",
-    "noResults": "Nessun risultato"
+    "noResults": "Nessun risultato",
+    "createNew": "Crea nuovo",
+    "backToSearch": "← Risultati"
   }
 }

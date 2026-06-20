@@ -144,6 +144,8 @@
     "open": "Open search",
     "clear": "Clear selection",
     "select": "Select",
-    "noResults": "No results"
+    "noResults": "No results",
+    "createNew": "Create new",
+    "backToSearch": "← Results"
   }
 }
