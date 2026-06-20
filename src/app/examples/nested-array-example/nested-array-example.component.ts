@@ -1,7 +1,7 @@
-import { Component, inject, signal } from '@angular/core';
-import { FieldType, FormFieldConfig, ValidatorType } from '../../models/form-field-config';
-import { FormEngineService } from '../../services/form-engine.service';
-import { FormRendererComponent } from '../form-renderer/form-renderer.component';
+﻿import { Component, inject, signal } from '@angular/core';
+import { FieldType, FormFieldConfig, ValidatorType } from '../../builder/models/form-field-config';
+import { FormEngineService } from '../../builder/services/form-engine.service';
+import { FormRendererComponent } from '../../builder/components/form-renderer/form-renderer.component';
 
 interface VoceForm {
   descrizione: string;
@@ -54,7 +54,7 @@ export class NestedArrayExampleComponent {
               validators: [{ type: ValidatorType.Required }],
             },
             {
-              type: FieldType.Input, field: 'importo', label: 'Importo (€)',
+              type: FieldType.Input, field: 'importo', label: 'Importo (â‚¬)',
               inputType: 'number',
             },
           ],

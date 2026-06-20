@@ -1,8 +1,8 @@
-import { inject, Injectable } from '@angular/core';
+﻿import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
-import { FieldOption } from '../models/form-field-config';
+import { FieldOption } from '../builder/models/form-field-config';
 
 @Injectable({ providedIn: 'root' })
 export class OptionsLoaderService {

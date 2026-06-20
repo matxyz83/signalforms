@@ -15,7 +15,10 @@
       "Bash(tar -xzf /tmp/progress-kendo-data-query-1.7.4.tgz -C /mnt/d/Projects/claude/sources/signalforms/node_modules/@progress/kendo-data-query --strip-components=1)",
       "Bash(nvm use *)",
       "Bash(find /mnt/d/Projects/claude/sources/signalforms/node_modules/@angular/forms -name \"*.d.ts\" | grep -i signal | head -10)",
-      "Read(//mnt/d/Projects/claude/sources/signalforms/node_modules/@angular/**)"
+      "Read(//mnt/d/Projects/claude/sources/signalforms/node_modules/@angular/**)",
+      "Bash(git mv *)",
+      "PowerShell(Rename-Item -Path \"d:\\\\Projects\\\\claude\\\\sources\\\\signalforms\\\\src\\\\app\\\\dynamic\" -NewName \"builder\")",
+      "Bash(powershell -Command ' *)"
     ]
   }
 }

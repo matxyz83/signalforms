@@ -37,11 +37,47 @@ Sei fix necessari, tutti già applicati:
 
 ## Architettura
 
-### Modelli (`src/app/models/`)
+### Struttura cartelle
+
+```
+src/app/
+├── app.component.{ts,html,scss}   # Shell principale (grid + form dialog + sezione esempi)
+├── app.config.ts
+├── transloco-loader.ts
+├── builder/                        # Libreria riusabile: motore form/grid
+│   ├── components/
+│   │   ├── fields/                 # Componenti campo (uno per FieldType)
+│   │   │   ├── array-field/
+│   │   │   ├── checkbox-field/
+│   │   │   ├── combobox-field/
+│   │   │   ├── date-field/
+│   │   │   ├── input-field/
+│   │   │   ├── lookup-field/
+│   │   │   ├── select-field/
+│   │   │   └── textarea-field/
+│   │   ├── form-dialog/
+│   │   ├── form-renderer/
+│   │   └── grid-renderer/
+│   ├── models/
+│   │   └── form-field-config.ts    # Tutti i tipi (FieldType, FormFieldConfig, GridColumnConfig, …)
+│   ├── services/
+│   │   ├── dynamic-form.service.ts # Parser JSON schema → FormFieldConfig
+│   │   └── form-engine.service.ts  # buildForm(), serializeValue()
+│   └── utils/
+│       └── field-error.ts
+├── examples/                       # Demo standalone (non fanno parte della libreria)
+│   ├── dynamic-form-example/
+│   ├── lookup-example/
+│   └── nested-array-example/
+└── services/
+    └── options-loader.service.ts   # Cache HTTP per opzioni (usato da AppComponent e esempi)
+```
+
+### Modelli (`src/app/builder/models/`)
 
 | File | Contenuto |
 |------|-----------|
-| `form-field-config.ts` | `FieldType`, `ValidatorType`, `FormFieldConfig`, `FormBuildOptions<T>`, `AsyncValidatorConfig`, `GridColumnConfig`, `GridOptionsLoader`, `OptionsLoader` |
+| `form-field-config.ts` | `FieldType`, `ValidatorType`, `AnyValidator`, `FormFieldConfig`, `FormBuildOptions<T>`, `AsyncValidatorConfig`, `GridColumnConfig`, `GridOptionsLoader`, `OptionsLoader` |
 
 `signal-forms.types.ts` e `signal-forms.impl.ts` sono stati **eliminati** — sostituiti dall'API ufficiale `@angular/forms/signals`.
 
@@ -60,8 +96,7 @@ type OptionsLoader = FieldOption[] | Observable<FieldOption[]> | ((state: Record
 | `options` | `OptionsLoader` | Opzioni statiche, Observable, o lambda `(state) => …` per cascading |
 | `searchFn` | `(term: string) => Observable<FieldOption[]>` | Ricerca server-side per combobox |
 | `visibleWhen` | `(values: Record<string, unknown>) => boolean` | Visibilità condizionale; internamente mappata a `hidden()` |
-| `customValidators` | `Array<(value) => {kind, message?} \| null>` | Validatori sincroni custom a livello controllo |
-| `asyncValidators` | `AsyncValidatorConfig[]` | Validatori async (`Promise`-based) a livello controllo |
+| `validators` | `AnyValidator[]` | Lista unificata: `ValidatorConfig` (standard), `CustomValidatorFn` (sync custom), `AsyncValidatorConfig` (async) — discriminati a runtime in `FormEngineService` |
 | `multiple` | `boolean` | Multiselect su Select e Combobox |
 | `inputType` | `InputType` | Tipo HTML input (`text` \| `email` \| `number` \| `tel` \| `url` \| `password` \| `search` \| `color`) |
 | `showInForm` | `boolean?` | `false` → campo nascosto nel form ma presente nel modello e nel payload (es. ID record). Default `undefined` = visibile. |
@@ -99,17 +134,23 @@ Simile a `OptionsLoader` ma senza parametro di stato (la grid non ha form state)
 | `display` | `'text' \| 'option' \| 'boolean'` | Modalità rendering cella: `'option'` → `labelForValue()`, `'boolean'` → checkbox readonly, `'text'` o omesso → default Kendo |
 | `displayFn` | `(value: unknown) => string` | Formatter personalizzato per la cella — ha priorità su `display` e `format`. Usare per valori non supportati da `[format]` Kendo (es. stringhe ISO date). Esempio: `(v) => v ? DateTime.fromISO(v as string).toFormat('dd/MM/yyyy') : ''` |
 
-### Servizi (`src/app/services/`)
+### Servizi
+
+**`src/app/builder/services/`**
 
 - **`FormEngineService`** — orchestra l'API ufficiale Angular Signal Forms
   - `buildForm<T>(model: WritableSignal<T>, config: FormFieldConfig[], options?: FormBuildOptions<T>): FieldTree<T>`
-    — chiama `form()` da `@angular/forms/signals`; traduce `ValidatorConfig[]` in `required()`, `email()`, `minLength()` ecc.; mappa `visibleWhen` → `hidden()`; gestisce `applyEach()` per i campi array
+    — chiama `form()` da `@angular/forms/signals`; itera `validators: AnyValidator[]` discriminando `typeof v === 'function'` (custom sync), `'validate' in v` (async), altrimenti builtin; mappa `visibleWhen` → `hidden()`; gestisce `applyEach()` per i campi array
   - `serializeValue(fieldTree, config): Record<string, unknown>` — esclude i campi con `hidden() === true`
   - I validatori async usano `resource()` da `@angular/core` avvolto in `runInInjectionContext`
 
-- **`OptionsLoaderService`** — `loadOptions(url, params)` con cache in-memory
+- **`DynamicFormService`** — parser JSON schema → `FormFieldConfig[]` (usato da `DynamicFormExampleComponent`)
 
-### Componenti field (`src/app/components/fields/`)
+**`src/app/services/`**
+
+- **`OptionsLoaderService`** — `loadOptions(url, params)` con cache in-memory (non sotto `builder/` perché usato anche da `AppComponent`)
+
+### Componenti field (`src/app/builder/components/fields/`)
 
 Tutti i componenti usano file separati (`templateUrl` + `styleUrl`): ogni cartella contiene `.ts`, `.html` e `.scss`.
 
@@ -144,7 +185,7 @@ readonly state = computed(() => this.control()());  // → FieldState<unknown>
 - Errori: `state().errors()` → `ValidationError[]` (kind + message)
 - Visibilità: `state().hidden()` → `boolean`
 
-### Form Renderer (`src/app/components/form-renderer/`)
+### Form Renderer (`src/app/builder/components/form-renderer/`)
 
 File: `form-renderer.component.{ts,html,scss}`
 
@@ -170,7 +211,7 @@ File: `form-renderer.component.{ts,html,scss}`
 // → genera grid-column: 3 / span 5; i 4 slot rimanenti dopo restano vuoti
 ```
 
-### Form Dialog (`src/app/components/form-dialog/`)
+### Form Dialog (`src/app/builder/components/form-dialog/`)
 
 File: `form-dialog.component.{ts,html,scss}`
 
@@ -194,7 +235,7 @@ Input: `open`, `title`, `formId`, `submitLabel`, `width`. Output: `cancel`. Il `
 - `title` e `submitLabel` sono stringhe plain (non chiavi Transloco) — il parent è responsabile di passare il testo già localizzato.
 - Solo `form.cancel` (bottone Annulla) è tradotto internamente con `| transloco`.
 
-### Grid Renderer (`src/app/components/grid-renderer/`)
+### Grid Renderer (`src/app/builder/components/grid-renderer/`)
 
 File: `grid-renderer.component.{ts,html,scss}`
 
@@ -288,7 +329,7 @@ Ogni `kendo-grid-column` usa un `kendoGridCellTemplate` indipendente dal `kendoG
 
 ### Utils
 
-- `src/app/utils/field-error.ts` — `firstErrorInfo(errors: readonly ValidationError[]): ErrorInfo`
+- `src/app/builder/utils/field-error.ts` — `firstErrorInfo(errors: readonly ValidationError[]): ErrorInfo`
   Interfaccia: `ErrorInfo { key: string; params?: Record<string, unknown> }`.
   Se `error.message` è presente restituisce `{ key: error.message }` (Transloco lo restituisce as-is se non trova la chiave).
   Per errori standard restituisce `{ key: 'errors.required' }` / `{ key: 'errors.minLength', params: { min } }` ecc.
@@ -469,19 +510,35 @@ La lambda riceve i valori correnti del form e viene chiamata dentro `runInInject
 
 ### Validatori custom
 
+Tutti i tipi di validatore convivono nella stessa prop `validators: AnyValidator[]`. `FormEngineService` li discrimina a runtime: `typeof v === 'function'` → custom sync, `'validate' in v` → async, altrimenti builtin standard.
+
 ```typescript
-// Sincrono — campo
-customValidators: [(value) => value === 'vietato' ? { kind: 'forbidden', message: '...' } : null]
+validators: [
+  // Standard (ValidatorConfig)
+  { type: ValidatorType.Required },
+  { type: ValidatorType.MinLength, value: 2 },
 
-// Async — campo (Promise-based, debounce configurabile)
-asyncValidators: [{ debounce: 500, validate: async (value) => { ... } }]
+  // Sincrono custom (CustomValidatorFn)
+  (value) => value === 'vietato' ? { kind: 'forbidden', message: '...' } : null,
 
-// Cross-field — form-level
+  // Asincrono (AsyncValidatorConfig, Promise-based, debounce configurabile)
+  { debounce: 500, validate: async (value) => { ... } },
+]
+
+// Cross-field — form-level (FormBuildOptions.validators, rimane separato)
 this.engine.buildForm(this.model, this.formConfig, {
   validators: [(values) => values.password !== values.confirm
     ? { kind: 'mismatch', message: 'Le password non corrispondono' }
     : null]
 })
+```
+
+**`DynamicFieldConfig`** — restringe `validators` a soli `ValidatorConfig[]` (JSON-serializzabile): le lambda non viaggiano in JSON.
+
+**`AnyValidator`** — tipo esportato da `form-field-config.ts`:
+```typescript
+type AnyValidator = ValidatorConfig | CustomValidatorFn | AsyncValidatorConfig;
+```
 ```
 
 ## Pattern di design

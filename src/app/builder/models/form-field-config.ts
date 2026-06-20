@@ -46,6 +46,9 @@ export interface AsyncValidatorConfig {
   debounce?: number;
 }
 
+/** Unione di tutti i tipi di validatore accettati da FormFieldConfig.validators */
+export type AnyValidator = ValidatorConfig | CustomValidatorFn | AsyncValidatorConfig;
+
 /** Opzioni form-level passate a FormEngineService.buildForm() */
 export interface FormBuildOptions<T> {
   /** Validatori sincroni cross-field (operano sull'intero valore del form) */
@@ -160,17 +163,20 @@ export interface DynamicVisibilityRule {
  *
  * Esclude i campi non serializzabili:
  * - `options` come Observable o lambda → solo `FieldOption[]` statico
- * - `searchFn`, `visibleWhen`, `customValidators`, `asyncValidators` → sostituiti da versioni dichiarative
+ * - `searchFn`, `visibleWhen` → sostituiti da versioni dichiarative
+ * - `validators` → ristretto a `ValidatorConfig[]` (funzioni non serializzabili in JSON)
  * - `arrayConfig` → non supportato nei campi dinamici
  */
 export type DynamicFieldConfig = Omit<
   FormFieldConfig,
-  'options' | 'searchFn' | 'visibleWhen' | 'customValidators' | 'asyncValidators' | 'arrayConfig' | 'lookupConfig'
+  'options' | 'searchFn' | 'visibleWhen' | 'validators' | 'arrayConfig' | 'lookupConfig'
 > & {
   /** Solo array statico di opzioni — Observable e lambda non sono serializzabili in JSON */
   options?: FieldOption[];
   /** Visibilità dichiarativa — convertita in funzione da DynamicFormService.toFormConfig() */
   visibleWhen?: DynamicVisibilityRule;
+  /** Solo validatori standard — CustomValidatorFn e AsyncValidatorConfig non sono serializzabili in JSON */
+  validators?: ValidatorConfig[];
 };
 
 /**
@@ -193,11 +199,8 @@ export interface FormFieldConfig {
   label: string;
   placeholder?: string;
   defaultValue?: unknown;
-  validators?: ValidatorConfig[];
-  /** Validatori sincroni custom a livello di singolo controllo */
-  customValidators?: CustomValidatorFn[];
-  /** Validatori asincroni a livello di singolo controllo */
-  asyncValidators?: AsyncValidatorConfig[];
+  /** Standard (ValidatorConfig), sincroni custom (CustomValidatorFn) e asincroni (AsyncValidatorConfig) — tutti nella stessa lista */
+  validators?: AnyValidator[];
   /**
    * Lista statica, Observable, oppure lambda `(state) => …`.
    * La lambda riceve i valori correnti del form e restituisce opzioni statiche o un Observable.

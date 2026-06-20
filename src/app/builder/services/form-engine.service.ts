@@ -47,16 +47,13 @@ export class FormEngineService {
       validate(path, () => null);
 
       for (const v of field.validators ?? []) {
-        this.applyBuiltinValidator(path, v);
-      }
-
-      for (const fn of field.customValidators ?? []) {
-        // ctx.value is a Signal<T> — must call value() to get the actual value
-        validate(path, ({ value }: any) => fn(value()) as any);
-      }
-
-      for (const asyncV of field.asyncValidators ?? []) {
-        this.applyAsyncValidator(path, asyncV);
+        if (typeof v === 'function') {
+          validate(path, ({ value }: any) => v(value()) as any);
+        } else if ('validate' in v) {
+          this.applyAsyncValidator(path, v);
+        } else {
+          this.applyBuiltinValidator(path, v);
+        }
       }
 
       if (field.visibleWhen) {

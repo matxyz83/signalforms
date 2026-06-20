@@ -1,14 +1,14 @@
-import { Component, computed, inject, signal } from '@angular/core';
+﻿import { Component, computed, inject, signal } from '@angular/core';
 import { process, State } from '@progress/kendo-data-query';
 import {
   DynamicFieldConfig, DynamicGridColumnConfig,
   FieldType, FormFieldConfig, GridColumnConfig, ValidatorType,
-} from '../../models/form-field-config';
-import { DynamicFormService } from '../../services/dynamic-form.service';
-import { FormEngineService } from '../../services/form-engine.service';
-import { FormRendererComponent } from '../form-renderer/form-renderer.component';
-import { FormDialogComponent } from '../form-dialog/form-dialog.component';
-import { GridRendererComponent, TypedGridResult } from '../grid-renderer/grid-renderer.component';
+} from '../../builder/models/form-field-config';
+import { DynamicFormService } from '../../builder/services/dynamic-form.service';
+import { FormEngineService } from '../../builder/services/form-engine.service';
+import { FormRendererComponent } from '../../builder/components/form-renderer/form-renderer.component';
+import { FormDialogComponent } from '../../builder/components/form-dialog/form-dialog.component';
+import { GridRendererComponent, TypedGridResult } from '../../builder/components/grid-renderer/grid-renderer.component';
 
 /** Entità con campi statici + campi dinamici serializzati in `data` */
 interface MemberEntity {

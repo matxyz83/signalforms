@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+﻿import { Component, computed, inject, signal } from '@angular/core';
 import { KENDO_DIALOGS } from "@progress/kendo-angular-dialog";
 import { toSignal } from '@angular/core/rxjs-interop';
 import { of } from 'rxjs';
@@ -6,15 +6,15 @@ import { process, State } from '@progress/kendo-data-query';
 import { TranslocoService } from '@jsverse/transloco';
 import { delay, map, startWith } from 'rxjs/operators';
 import { DateTime, Info } from 'luxon';
-import { FieldOption, FieldType, FormFieldConfig, GridColumnConfig, ValidatorType } from './models/form-field-config';
-import { FormEngineService } from './services/form-engine.service';
+import { FieldOption, FieldType, FormFieldConfig, GridColumnConfig, ValidatorType } from './builder/models/form-field-config';
+import { FormEngineService } from './builder/services/form-engine.service';
 import { OptionsLoaderService } from './services/options-loader.service';
-import { FormRendererComponent } from './components/form-renderer/form-renderer.component';
-import { FormDialogComponent } from './components/form-dialog/form-dialog.component';
-import { GridRendererComponent, TypedGridResult } from './components/grid-renderer/grid-renderer.component';
-import { DynamicFormExampleComponent } from './components/dynamic-form-example/dynamic-form-example.component';
-import { LookupExampleComponent } from './components/lookup-example/lookup-example.component';
-import { NestedArrayExampleComponent } from './components/nested-array-example/nested-array-example.component';
+import { FormRendererComponent } from './builder/components/form-renderer/form-renderer.component';
+import { FormDialogComponent } from './builder/components/form-dialog/form-dialog.component';
+import { GridRendererComponent, TypedGridResult } from './builder/components/grid-renderer/grid-renderer.component';
+import { DynamicFormExampleComponent } from './examples/dynamic-form-example/dynamic-form-example.component';
+import { LookupExampleComponent } from './examples/lookup-example/lookup-example.component';
+import { NestedArrayExampleComponent } from './examples/nested-array-example/nested-array-example.component';
 
 interface ContattoForm {
   nome: string;
@@ -291,9 +291,7 @@ export class AppComponent {
         validators: [
           { type: ValidatorType.Required },
           { type: ValidatorType.MinLength, value: 2 },
-        ],
-        customValidators: [
-          value => typeof value === 'string' && value.startsWith(' ')
+          (value: unknown) => typeof value === 'string' && value.startsWith(' ')
             ? { kind: 'noLeadingSpace', message: 'Non può iniziare con uno spazio' }
             : null,
         ],
@@ -304,16 +302,16 @@ export class AppComponent {
         validators: [
           { type: ValidatorType.Required },
           { type: ValidatorType.Email },
-        ],
-        asyncValidators: [{
-          debounce: 500,
-          validate: async (value) => {
-            await new Promise(r => setTimeout(r, 300));
-            return String(value) === 'test@test.it'
-              ? { kind: 'emailTaken', message: 'Email già in uso' }
-              : null;
+          {
+            debounce: 500,
+            validate: async (value) => {
+              await new Promise(r => setTimeout(r, 300));
+              return String(value) === 'test@test.it'
+                ? { kind: 'emailTaken', message: 'Email già in uso' }
+                : null;
+            },
           },
-        }],
+        ],
       },
       {
         type: FieldType.Input, field: 'eta', label: 'fields.eta.label', inputType: 'number',

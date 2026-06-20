@@ -38,7 +38,11 @@ export class RowRendererComponent {
   readonly FieldType = FieldType;
 
   controlFor(): FieldTree<unknown> {
-    return (this.form() as any)[this.fieldConfig().field];
+    const fieldTree = (this.form() as any)[this.fieldConfig().field];
+    if(!fieldTree)
+      console.debug(`${this.fieldConfig().field} not exists`);
+    return fieldTree;
+
   }
 
   /**

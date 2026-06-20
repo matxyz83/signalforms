@@ -1,12 +1,12 @@
-import { Component, computed, inject, signal } from '@angular/core';
+﻿import { Component, computed, inject, signal } from '@angular/core';
 import { of } from 'rxjs';
 import { delay } from 'rxjs/operators';
 import { process, State } from '@progress/kendo-data-query';
-import { FieldOption, FieldType, FormFieldConfig, GridColumnConfig, ValidatorType } from '../../models/form-field-config';
-import { FormEngineService } from '../../services/form-engine.service';
-import { FormRendererComponent } from '../form-renderer/form-renderer.component';
-import { FormDialogComponent } from '../form-dialog/form-dialog.component';
-import { GridRendererComponent, TypedGridResult } from '../grid-renderer/grid-renderer.component';
+import { FieldOption, FieldType, FormFieldConfig, GridColumnConfig, ValidatorType } from '../../builder/models/form-field-config';
+import { FormEngineService } from '../../builder/services/form-engine.service';
+import { FormRendererComponent } from '../../builder/components/form-renderer/form-renderer.component';
+import { FormDialogComponent } from '../../builder/components/form-dialog/form-dialog.component';
+import { GridRendererComponent, TypedGridResult } from '../../builder/components/grid-renderer/grid-renderer.component';
 
 // Omit<..., never> forza il tipo attraverso il mapped-type di TypeScript,
 // che soddisfa il vincolo T extends Record<string, unknown> di GridRendererComponent.
