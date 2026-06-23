@@ -33,6 +33,40 @@ export class FormEngineService {
     });
   }
 
+  private applyAsyncValidator(path: any, asyncV: AsyncValidatorConfig): void {
+    const injector = this.injector;
+    validateAsync(path, {
+      params: ({ value }: any) =>
+        value !== undefined && value !== null && value !== '' ? value : undefined,
+      factory: (params: any) =>
+        runInInjectionContext(injector, () =>
+          resource({
+            params: () => (params as any)(),
+            loader: async ({ params: p }: any) => {
+              if (p === undefined) return undefined;
+              return asyncV.validate(p);
+            },
+          }),
+        ),
+      onSuccess: (result: any) => result ?? null,
+      onError:   () => ({ kind: 'asyncError', message: 'Errore di validazione' }),
+      debounce:  asyncV.debounce ?? 300,
+    });
+  }
+
+  private applyBuiltinValidator(path: any, v: ValidatorConfig): void {
+    const opt = v.message ? { message: v.message } : undefined;
+    switch (v.type) {
+      case ValidatorType.Required:   required(path, opt);                                   break;
+      case ValidatorType.Email:      email(path, opt);                                      break;
+      case ValidatorType.Min:        min(path, Number(v.value ?? 0), opt);                  break;
+      case ValidatorType.Max:        max(path, Number(v.value ?? 0), opt);                  break;
+      case ValidatorType.MinLength:  minLength(path, Number(v.value ?? 0), opt);            break;
+      case ValidatorType.MaxLength:  maxLength(path, Number(v.value ?? 0), opt);            break;
+      case ValidatorType.Pattern:    pattern(path, new RegExp(String(v.value ?? '')), opt); break;
+    }
+  }
+
   private applyFieldSchema(
     schemaPath: any,
     config: FormFieldConfig[],
@@ -68,40 +102,6 @@ export class FormEngineService {
         });
       }
     }
-  }
-
-  private applyBuiltinValidator(path: any, v: ValidatorConfig): void {
-    const opt = v.message ? { message: v.message } : undefined;
-    switch (v.type) {
-      case ValidatorType.Required:   required(path, opt);                                   break;
-      case ValidatorType.Email:      email(path, opt);                                      break;
-      case ValidatorType.Min:        min(path, Number(v.value ?? 0), opt);                  break;
-      case ValidatorType.Max:        max(path, Number(v.value ?? 0), opt);                  break;
-      case ValidatorType.MinLength:  minLength(path, Number(v.value ?? 0), opt);            break;
-      case ValidatorType.MaxLength:  maxLength(path, Number(v.value ?? 0), opt);            break;
-      case ValidatorType.Pattern:    pattern(path, new RegExp(String(v.value ?? '')), opt); break;
-    }
-  }
-
-  private applyAsyncValidator(path: any, asyncV: AsyncValidatorConfig): void {
-    const injector = this.injector;
-    validateAsync(path, {
-      params: ({ value }: any) =>
-        value !== undefined && value !== null && value !== '' ? value : undefined,
-      factory: (params: any) =>
-        runInInjectionContext(injector, () =>
-          resource({
-            params: () => (params as any)(),
-            loader: async ({ params: p }: any) => {
-              if (p === undefined) return undefined;
-              return asyncV.validate(p);
-            },
-          }),
-        ),
-      onSuccess: (result: any) => result ?? null,
-      onError:   () => ({ kind: 'asyncError', message: 'Errore di validazione' }),
-      debounce:  asyncV.debounce ?? 300,
-    });
   }
 
 }

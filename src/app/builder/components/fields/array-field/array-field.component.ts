@@ -30,20 +30,12 @@ import { DateFieldComponent } from '../date-field/date-field.component';
   styleUrl: './row-renderer.component.scss',
 })
 export class RowRendererComponent {
-  readonly form          = input.required<FieldTree<Record<string, unknown>>>();
-  readonly fieldConfig   = input.required<FormFieldConfig>();
   /** Riferimento ad ArrayFieldComponent passato a runtime per evitare la dipendenza circolare. */
   readonly arrayFieldCmp = input<Type<unknown>>();
-
+  readonly fieldConfig   = input.required<FormFieldConfig>();
   readonly FieldType = FieldType;
 
-  controlFor(): FieldTree<unknown> | undefined {
-    const fieldTree = (this.form() as any)[this.fieldConfig().field];
-    if(!fieldTree)
-      console.debug(`${this.fieldConfig().field} not exists`);
-    return fieldTree;
-
-  }
+  readonly form          = input.required<FieldTree<Record<string, unknown>>>();
 
   /**
    * Inputs stabili per NgComponentOutlet nel caso Array annidato.
@@ -53,9 +45,17 @@ export class RowRendererComponent {
   readonly nestedArrayInputs = computed(() => {
     const tree  = this.form();
     const field = this.fieldConfig();
-    const control = untracked(() => (tree as any)[field.field]);
+    const control = untracked(() => (tree)[field.field]);
     return { control, config: field };
   });
+
+  controlFor(): FieldTree<unknown> | undefined {
+    const fieldTree = (this.form())[this.fieldConfig().field];
+    if(!fieldTree)
+      console.debug(`${this.fieldConfig().field} not exists`);
+    return fieldTree;
+
+  }
 }
 
 /**
@@ -69,32 +69,32 @@ export class RowRendererComponent {
   styleUrl: './array-field.component.scss',
 })
 export class ArrayFieldComponent {
-  readonly control = input.required<FieldTree<unknown[]>>();
-  readonly config  = input.required<FormFieldConfig>();
-
   /**
    * Self-reference passata a RowRendererComponent per il rendering di array annidati.
    * Property d'istanza (non statica): viene inizializzata alla costruzione dell'oggetto,
    * quando la classe è già definita — nessuna TDZ.
    */
   readonly ArrayFieldRef: Type<unknown> = ArrayFieldComponent as unknown as Type<unknown>;
+  readonly config  = input.required<FormFieldConfig>();
+
+  readonly control = input.required<FieldTree<unknown[]>>();
 
   readonly iconAdd: SVGIcon   = plusIcon;
   readonly iconRemove: SVGIcon = trashIcon;
 
-  private readonly state = computed(() => (this.control() as any)());
+  private readonly state = computed(() => this.control()());
 
   readonly indices   = computed(() =>
     Array.from({ length: (this.state().value() as unknown[]).length }, (_, i) => i),
   );
   readonly isMutable = computed(() => this.config().mutable !== false);
 
-  itemFieldFor(i: number): FieldTree<Record<string, unknown>> {
-    return (this.control() as any)[i];
-  }
-
   addRow(): void {
     this.state().value.update((arr: unknown[]) => [...arr, this.buildDefaultItem()]);
+  }
+
+  itemFieldFor(i: number): FieldTree<Record<string, unknown>> {
+    return (this.control() as any)[i];
   }
 
   removeRow(i: number): void {

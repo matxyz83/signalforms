@@ -6,8 +6,13 @@ import { FieldOption } from '../builder/models/form-field-config';
 
 @Injectable({ providedIn: 'root' })
 export class OptionsLoaderService {
-  private readonly http = inject(HttpClient);
   private readonly cache = new Map<string, FieldOption[]>();
+  private readonly http = inject(HttpClient);
+
+  /** Svuota la cache (utile nei test) */
+  clearCache(): void {
+    this.cache.clear();
+  }
 
   /**
    * Carica le opzioni da un endpoint remoto.
@@ -35,11 +40,6 @@ export class OptionsLoaderService {
       tap(options => this.cache.set(cacheKey, options)),
       catchError(() => of([])),
     );
-  }
-
-  /** Svuota la cache (utile nei test) */
-  clearCache(): void {
-    this.cache.clear();
   }
 
   private normalizeOptions(data: unknown[]): FieldOption[] {

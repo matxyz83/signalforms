@@ -154,15 +154,6 @@ type NewProductForm = Omit<
   ],
 })
 export class CreateProductDialogComponent {
-  private readonly dialogRef = inject(DialogRef);
-  private readonly engine = inject(FormEngineService);
-
-  readonly formModel = signal<NewProductForm>({
-    nome: "",
-    categoria: "",
-    prezzo: 0,
-  });
-
   readonly formConfig: FormFieldConfig[] = [
     {
       type: FieldType.Input,
@@ -173,15 +164,24 @@ export class CreateProductDialogComponent {
     { type: FieldType.Input, field: "categoria", label: "Categoria" },
     { type: FieldType.Input, field: "prezzo", label: "Prezzo" },
   ];
+  readonly formModel = signal<NewProductForm>({
+    nome: "",
+    categoria: "",
+    prezzo: 0,
+  });
+
+  private readonly engine = inject(FormEngineService);
 
   readonly form = this.engine.buildForm(this.formModel, this.formConfig);
 
-  onSubmit(payload: Record<string, unknown>): void {
-    this.dialogRef.close(payload);
-  }
+  private readonly dialogRef = inject(DialogRef);
 
   cancel(): void {
     this.dialogRef.close(null);
+  }
+
+  onSubmit(payload: Record<string, unknown>): void {
+    this.dialogRef.close(payload);
   }
 }
 
@@ -195,19 +195,13 @@ export class CreateProductDialogComponent {
   styleUrl: "./lookup-example.component.scss",
 })
 export class LookupExampleComponent {
+  readonly currentId = signal<number | null>(null);
+  readonly formConfig: FormFieldConfig[] = this.buildFormConfig();
+
+  readonly formModel = signal<OrdineForm>(EMPTY);
   private readonly engine = inject(FormEngineService);
-  private readonly dialogService = inject(DialogService);
 
-  readonly orders = signal<OrdineForm[]>(SAMPLE_ORDERS);
-  readonly gridState = signal<State>({ filter: { filters: [], logic: "and" } });
-
-  readonly gridData = computed<TypedGridResult<OrdineForm>>(
-    () =>
-      process(
-        this.orders() as unknown as Record<string, unknown>[],
-        this.gridState(),
-      ) as TypedGridResult<OrdineForm>,
-  );
+  readonly form = this.engine.buildForm(this.formModel, this.formConfig);
 
   readonly gridColumns: GridColumnConfig[] = [
     { field: "prodotto", title: "columns.prodotto", display: "option" },
@@ -220,18 +214,24 @@ export class LookupExampleComponent {
     { field: "note", title: "fields.note.label", filter: "text" },
   ];
 
-  readonly showForm = signal(false);
+  readonly gridState = signal<State>({ filter: { filters: [], logic: "and" } });
+  readonly orders = signal<OrdineForm[]>(SAMPLE_ORDERS);
+  readonly gridData = computed<TypedGridResult<OrdineForm>>(
+    () =>
+      process(
+        this.orders() as unknown as Record<string, unknown>[],
+        this.gridState(),
+      ) as TypedGridResult<OrdineForm>,
+  );
+
   readonly isNew = signal(false);
-  readonly currentId = signal<number | null>(null);
-
-  readonly formModel = signal<OrdineForm>(EMPTY);
-  readonly formConfig: FormFieldConfig[] = this.buildFormConfig();
-  readonly form = this.engine.buildForm(this.formModel, this.formConfig);
-
   readonly lastPayload = signal<string | null>(null);
+  readonly showForm = signal(false);
 
-  onGridStateChange(state: State): void {
-    this.gridState.set(state);
+  private readonly dialogService = inject(DialogService);
+
+  cancelForm(): void {
+    this.showForm.set(false);
   }
 
   onCreateClick(): void {
@@ -241,16 +241,16 @@ export class LookupExampleComponent {
     this.showForm.set(true);
   }
 
+  onDeleteClick(item: OrdineForm): void {
+    this.orders.update((list) => list.filter((o) => o.id !== item.id));
+    if (this.currentId() === item.id) this.showForm.set(false);
+  }
+
   onEditClick(item: OrdineForm): void {
     this.formModel.set(item);
     this.isNew.set(false);
     this.currentId.set(item.id);
     this.showForm.set(true);
-  }
-
-  onDeleteClick(item: OrdineForm): void {
-    this.orders.update((list) => list.filter((o) => o.id !== item.id));
-    if (this.currentId() === item.id) this.showForm.set(false);
   }
 
   onFormSubmit(payload: Record<string, unknown>): void {
@@ -267,8 +267,8 @@ export class LookupExampleComponent {
     this.showForm.set(false);
   }
 
-  cancelForm(): void {
-    this.showForm.set(false);
+  onGridStateChange(state: State): void {
+    this.gridState.set(state);
   }
 
   private buildFormConfig(): FormFieldConfig[] {

@@ -18,7 +18,8 @@
       "Read(//mnt/d/Projects/claude/sources/signalforms/node_modules/@angular/**)",
       "Bash(git mv *)",
       "PowerShell(Rename-Item -Path \"d:\\\\Projects\\\\claude\\\\sources\\\\signalforms\\\\src\\\\app\\\\dynamic\" -NewName \"builder\")",
-      "Bash(powershell -Command ' *)"
+      "Bash(powershell -Command ' *)",
+      "PowerShell(npx ng lint 2>&1)"
     ]
   }
 }

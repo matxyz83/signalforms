@@ -137,45 +137,44 @@ export class DynamicFormExampleComponent {
   private readonly engine     = inject(FormEngineService);
   private readonly dynService = inject(DynamicFormService);
 
-  readonly formColumns = FORM_COLUMNS;
-
   // Config form completa: statica + dinamica convertita
   readonly fullFormConfig: FormFieldConfig[] = [
     ...STATIC_FORM_CONFIG,
     ...this.dynService.toFormConfig(DYNAMIC_FIELDS),
   ];
 
+  readonly formModel = signal<Record<string, unknown>>(this.emptyView());
+  readonly form      = this.engine.buildForm(this.formModel, this.fullFormConfig);
+
+  readonly currentId = signal<number | null>(null);
+  /** JSON grezzo ricevuto dall'"API" — mostrato nel pannello di debug */
+  readonly dynConfigJson = API_SCHEMA_JSON;
+
+  readonly formColumns = FORM_COLUMNS;
+
   // Colonne grid: statiche + dinamiche convertite
   readonly gridColumns: GridColumnConfig[] = [
     ...STATIC_GRID_COLUMNS,
     ...this.dynService.toGridColumns(DYNAMIC_COLUMNS),
   ];
-
-  readonly members   = signal<MemberEntity[]>(SAMPLE_MEMBERS);
   readonly gridState = signal<State>({ filter: { filters: [], logic: 'and' } });
 
+  readonly members   = signal<MemberEntity[]>(SAMPLE_MEMBERS);
   readonly gridData = computed<TypedGridResult<Record<string, unknown>>>(() =>
     process(
       this.members().map(m => this.toView(m)),
       this.gridState(),
     ) as TypedGridResult<Record<string, unknown>>
   );
+  readonly isNew     = signal(false);
 
-  readonly formModel = signal<Record<string, unknown>>(this.emptyView());
-  readonly form      = this.engine.buildForm(this.formModel, this.fullFormConfig);
+  lastPayload: string | null = null;
+  showConfigJson = false;
 
   readonly showForm  = signal(false);
-  readonly isNew     = signal(false);
-  readonly currentId = signal<number | null>(null);
 
-  showConfigJson = false;
-  lastPayload: string | null = null;
-
-  /** JSON grezzo ricevuto dall'"API" — mostrato nel pannello di debug */
-  readonly dynConfigJson = API_SCHEMA_JSON;
-
-  onGridStateChange(state: State): void {
-    this.gridState.set(state);
+  cancelForm(): void {
+    this.showForm.set(false);
   }
 
   onCreateClick(): void {
@@ -185,6 +184,10 @@ export class DynamicFormExampleComponent {
     this.showForm.set(true);
   }
 
+  onDeleteClick(item: Record<string, unknown>): void {
+    this.members.update(list => list.filter(m => m.id !== item['id']));
+  }
+
   onEditClick(item: Record<string, unknown>): void {
     this.formModel.set(item);
     this.isNew.set(false);
@@ -192,12 +195,7 @@ export class DynamicFormExampleComponent {
     this.showForm.set(true);
   }
 
-  onDeleteClick(item: Record<string, unknown>): void {
-    this.members.update(list => list.filter(m => m.id !== item['id']));
-  }
-
   onFormSubmit(payload: Record<string, unknown>): void {
-    debugger;
     // collapsePayload ricollassa i campi dinamici flat nel campo data: string
     const entity = this.dynService.collapsePayload(payload, DYNAMIC_FIELDS) as unknown as MemberEntity;
     this.lastPayload = JSON.stringify(entity, null, 2);
@@ -211,16 +209,16 @@ export class DynamicFormExampleComponent {
     this.showForm.set(false);
   }
 
-  cancelForm(): void {
-    this.showForm.set(false);
+  onGridStateChange(state: State): void {
+    this.gridState.set(state);
+  }
+
+  private emptyView(): Record<string, unknown> {
+    return { id: null, nome: '', ...this.dynService.parseData(null, DYNAMIC_FIELDS) };
   }
 
   /** Espande data: string → campi flat per grid e form */
   private toView(m: MemberEntity): Record<string, unknown> {
     return { id: m.id, nome: m.nome, ...this.dynService.parseData(m.data, DYNAMIC_FIELDS) };
-  }
-
-  private emptyView(): Record<string, unknown> {
-    return { id: null, nome: '', ...this.dynService.parseData(null, DYNAMIC_FIELDS) };
   }
 }

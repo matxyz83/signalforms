@@ -129,37 +129,13 @@ export class AppComponent {
   private readonly transloco = inject(TranslocoService);
 
   readonly activeLang = toSignal(this.transloco.langChanges$, { initialValue: this.transloco.getActiveLang() });
-
-  /** Nomi dei giorni localizzati: si ricalcola ad ogni cambio lingua. */
-  readonly weekdays = computed(() => weekdaysForLocale(this.activeLang()));
-
-  setLang(lang: string): void {
-    this.transloco.setActiveLang(lang);
-  }
-
-  readonly people = signal<PersonForm[]>(SAMPLE_PEOPLE);
-
-  readonly gridState = signal<State>({ skip: 0, take: 5, filter: { filters: [], logic: 'and' } });
-
-  // Mappa PersonForm → PersonFormView prima di passare alla griglia.
-  // Dipende da weekdays() per aggiornare le label al cambio lingua.
-  readonly gridData = computed<TypedGridResult<PersonFormView>>(() => {
-    const wd = this.weekdays();
-    return process(
-      this.people().map(p => AppComponent.toView(p, wd)) as unknown as Record<string, unknown>[],
-      this.gridState(),
-    ) as TypedGridResult<PersonFormView>;
-  });
-
-  readonly showForm = signal(false);
-  readonly isNew    = signal(false);
   readonly currentId = signal<number | null>(null);
 
   readonly formModel = signal<PersonFormView>(
     AppComponent.toView(EMPTY, weekdaysForLocale(this.transloco.getActiveLang())),
   );
   readonly formConfig: FormFieldConfig[] = this.buildFormConfig();
-  readonly formServerErrors = signal<Record<string, string>>({});
+
   readonly form = this.engine.buildForm(this.formModel, this.formConfig, {
     validators: [
       values => values.termini === false && values.nome !== ''
@@ -167,6 +143,8 @@ export class AppComponent {
         : null,
     ],
   });
+
+  readonly formServerErrors = signal<Record<string, string>>({});
 
   readonly gridColumns: GridColumnConfig[] = [
     { field: 'nome',        title: 'columns.nome',        filter: 'text' },
@@ -209,16 +187,33 @@ export class AppComponent {
     { field: 'newsletter',  title: 'columns.newsletter',  width: 110, filter: 'boolean', display: 'boolean' },
     { field: 'dataNascita', title: 'columns.dataNascita', width: 180, filter: 'date', format: 'dd/MM/yyyy' },
   ];
+  readonly gridState = signal<State>({ skip: 0, take: 5, filter: { filters: [], logic: 'and' } });
+  readonly people = signal<PersonForm[]>(SAMPLE_PEOPLE);
+
+  /** Nomi dei giorni localizzati: si ricalcola ad ogni cambio lingua. */
+  readonly weekdays = computed(() => weekdaysForLocale(this.activeLang()));
+  // Mappa PersonForm → PersonFormView prima di passare alla griglia.
+  // Dipende da weekdays() per aggiornare le label al cambio lingua.
+  readonly gridData = computed<TypedGridResult<PersonFormView>>(() => {
+    const wd = this.weekdays();
+    return process(
+      this.people().map(p => AppComponent.toView(p, wd)) as unknown as Record<string, unknown>[],
+      this.gridState(),
+    ) as TypedGridResult<PersonFormView>;
+  });
+  readonly isNew    = signal(false);
+  lastAction: { label: string; json: string } | null = null;
+
+  readonly selectedJson = () => JSON.stringify(this.selectedPeople().map(AppComponent.fromView), null, 2);
 
   // La griglia emette PersonFormView (dati già mappati); la serializzazione JSON
   // mostra fromView() così il payload finale ha weekday: number.
   readonly selectedPeople = signal<PersonFormView[]>([]);
-  readonly selectedJson = () => JSON.stringify(this.selectedPeople().map(AppComponent.fromView), null, 2);
+  readonly showForm = signal(false);
 
-  lastAction: { label: string; json: string } | null = null;
-
-  onGridStateChange(state: State): void {
-    this.gridState.set(state);
+  cancelForm(): void {
+    this.formServerErrors.set({});
+    this.showForm.set(false);
   }
 
   onCreateClick(): void {
@@ -228,6 +223,12 @@ export class AppComponent {
     this.showForm.set(true);
   }
 
+  onDeleteClick(item: PersonFormView): void {
+    this.people.update(list => list.filter(p => p.id !== item.id));
+    this.lastAction = { label: `eliminato #${item.id}`, json: JSON.stringify(AppComponent.fromView(item), null, 2) };
+    if (this.currentId() === item.id) this.showForm.set(false);
+  }
+
   onEditClick(item: PersonFormView): void {
     this.formModel.set(item);
     this.isNew.set(false);
@@ -235,17 +236,11 @@ export class AppComponent {
     this.showForm.set(true);
   }
 
-  onDeleteClick(item: PersonFormView): void {
-    this.people.update(list => list.filter(p => p.id !== item.id));
-    this.lastAction = { label: `eliminato #${item.id}`, json: JSON.stringify(AppComponent.fromView(item), null, 2) };
-    if (this.currentId() === item.id) this.showForm.set(false);
-  }
-
   onFormSubmit(payload: PersonFormView): void {
     const person = AppComponent.fromView(payload);
     // Simula errore server: "Admin" è un nome riservato.
     if (person.nome === 'Admin') {
-      this.formServerErrors.set({ nome1: 'Questo nome è riservato (errore simulato dal server)' });
+      this.formServerErrors.set({ nome: 'Questo nome è riservato (errore simulato dal server)' });
       return;
     }
     this.formServerErrors.set({});
@@ -261,29 +256,16 @@ export class AppComponent {
     this.showForm.set(false);
   }
 
-  cancelForm(): void {
-    this.formServerErrors.set({});
-    this.showForm.set(false);
+  onGridStateChange(state: State): void {
+    this.gridState.set(state);
   }
 
   onSelectionChange(items: PersonFormView[]): void {
     this.selectedPeople.set(items);
   }
 
-  /** PersonForm → PersonFormView */
-  private static toView(p: PersonForm, weekdays: FieldOption[]): PersonFormView {
-    return {
-      ...p,
-      weekday: weekdays.find(d => d.value === p.weekday) ?? null,
-    };
-  }
-
-  /** PersonFormView → PersonForm */
-  private static fromView(v: PersonFormView): PersonForm {
-    return {
-      ...v,
-      weekday: (v.weekday?.value as number) ?? null,
-    };
+  setLang(lang: string): void {
+    this.transloco.setActiveLang(lang);
   }
 
   private buildFormConfig(): FormFieldConfig[] {
@@ -439,5 +421,21 @@ export class AppComponent {
         ],
       },
     ];
+  }
+
+  /** PersonFormView → PersonForm */
+  private static fromView(v: PersonFormView): PersonForm {
+    return {
+      ...v,
+      weekday: (v.weekday?.value as number) ?? null,
+    };
+  }
+
+  /** PersonForm → PersonFormView */
+  private static toView(p: PersonForm, weekdays: FieldOption[]): PersonFormView {
+    return {
+      ...p,
+      weekday: weekdays.find(d => d.value === p.weekday) ?? null,
+    };
   }
 }

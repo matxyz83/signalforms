@@ -24,15 +24,25 @@ function resolveOptions(opts: FieldOption[] | Observable<FieldOption[]> | undefi
 })
 export class SelectFieldComponent {
   readonly control     = input.required<FieldTree<unknown>>();
-  readonly config      = input.required<FormFieldConfig>();
-  readonly formValues  = input<Signal<Record<string, unknown>> | undefined>(undefined);
-  readonly disabledSig = input<Signal<boolean>>(signal(false));
-
-  private readonly injector  = inject(Injector);
-  private readonly transloco = inject(TranslocoService);
-
   readonly state      = computed(() => this.control()());
-  readonly isDisabled = computed(() => this.disabledSig()());
+  readonly arrayValue = computed<FieldOption[]>(() => {
+    const v = this.state().value();
+    return Array.isArray(v) ? (v as FieldOption[]) : [];
+  });
+  readonly config      = input.required<FormFieldConfig>();
+
+  private readonly transloco = inject(TranslocoService);
+  // TranslocoService necessario qui: defaultItem.label è una stringa dentro un oggetto Kendo,
+  // non può essere tradotta con la pipe nel template.
+  readonly defaultItem = computed(() => ({
+    label: this.transloco.translate(this.config().placeholder ?? 'select.choose'),
+    value: null,
+  }));
+
+  readonly disabledSig = input<Signal<boolean>>(signal(false));
+  private readonly injector  = inject(Injector);
+
+  readonly formValues  = input<Signal<Record<string, unknown>> | undefined>(undefined);
 
   private readonly stateValues = computed<Record<string, unknown>>(() => {
     const sig = this.formValues();
@@ -54,24 +64,14 @@ export class SelectFieldComponent {
     { initialValue: [] as FieldOption[] },
   );
 
-  // TranslocoService necessario qui: defaultItem.label è una stringa dentro un oggetto Kendo,
-  // non può essere tradotta con la pipe nel template.
-  readonly defaultItem = computed(() => ({
-    label: this.transloco.translate(this.config().placeholder ?? 'select.choose'),
-    value: null,
-  }));
-
   readonly serverError = input<string | null>(null);
 
-  readonly arrayValue = computed<FieldOption[]>(() => {
-    const v = this.state().value();
-    return Array.isArray(v) ? (v as FieldOption[]) : [];
-  });
-  readonly showError = computed(() => (this.state().touched() && this.state().invalid()) || !!this.serverError());
   readonly errorInfo = computed(() => {
     const se = this.serverError();
     return se ? { key: se } : firstErrorInfo(this.state().errors());
   });
+  readonly isDisabled = computed(() => this.disabledSig()());
+  readonly showError = computed(() => (this.state().touched() && this.state().invalid()) || !!this.serverError());
 
   onValueChange(value: unknown): void {
     const s = this.state();

@@ -23,15 +23,18 @@ const DEFAULT_FORMAT: Partial<Record<FieldType, string>> = {
   styleUrl: './date-field.component.scss',
 })
 export class DateFieldComponent {
-  readonly control     = input.required<FieldTree<unknown>>();
   readonly config      = input.required<FormFieldConfig>();
-  readonly disabledSig = input<Signal<boolean>>(signal(false));
-
-  readonly FieldType = FieldType;
-
+  readonly control     = input.required<FieldTree<unknown>>();
   readonly state      = computed(() => this.control()());
-  readonly isDisabled = computed(() => this.disabledSig()());
 
+  readonly dateValue = computed(() => {
+    const v = this.state().value();
+    if (v instanceof Date) return v;
+    if (typeof v === 'string' && v) return this.parseString(v);
+    return null;
+  });
+
+  readonly disabledSig = input<Signal<boolean>>(signal(false));
   /** Formato di visualizzazione nel picker — usa `config().format` se presente, altrimenti il default per tipo. */
   readonly displayFormat = computed(() => {
     if (this.config().format) return this.config().format!;
@@ -44,17 +47,14 @@ export class DateFieldComponent {
 
   readonly serverError = input<string | null>(null);
 
-  readonly dateValue = computed(() => {
-    const v = this.state().value();
-    if (v instanceof Date) return v;
-    if (typeof v === 'string' && v) return this.parseString(v);
-    return null;
-  });
-  readonly showError = computed(() => (this.state().touched() && this.state().invalid()) || !!this.serverError());
   readonly errorInfo = computed(() => {
     const se = this.serverError();
     return se ? { key: se } : firstErrorInfo(this.state().errors());
   });
+
+  readonly FieldType = FieldType;
+  readonly isDisabled = computed(() => this.disabledSig()());
+  readonly showError = computed(() => (this.state().touched() && this.state().invalid()) || !!this.serverError());
 
   onValueChange(value: Date | null): void {
     const s = this.state();
@@ -68,14 +68,14 @@ export class DateFieldComponent {
     s.markAsDirty();
   }
 
+  private formatDate(d: Date): string {
+    const fmt = DEFAULT_FORMAT[this.config().type] ?? "yyyy-MM-dd'T'HH:mm:ss";
+    return DateTime.fromJSDate(d).toFormat(fmt);
+  }
+
   private parseString(raw: string): Date | null {
     const fmt = DEFAULT_FORMAT[this.config().type];
     const dt = fmt ? DateTime.fromFormat(raw, fmt) : DateTime.fromISO(raw);
     return dt.isValid ? dt.toJSDate() : null;
-  }
-
-  private formatDate(d: Date): string {
-    const fmt = DEFAULT_FORMAT[this.config().type] ?? "yyyy-MM-dd'T'HH:mm:ss";
-    return DateTime.fromJSDate(d).toFormat(fmt);
   }
 }

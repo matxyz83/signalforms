@@ -14,20 +14,20 @@ import { firstErrorInfo } from '../../../utils/field-error';
   styleUrl: './textarea-field.component.scss',
 })
 export class TextareaFieldComponent {
-  readonly control     = input.required<FieldTree<unknown>>();
   readonly config      = input.required<FormFieldConfig>();
+  readonly control     = input.required<FieldTree<unknown>>();
   readonly disabledSig = input<Signal<boolean>>(signal(false));
 
-  readonly state      = computed(() => this.control()());
-  readonly isDisabled = computed(() => this.disabledSig()());
-
   readonly serverError = input<string | null>(null);
+  readonly state      = computed(() => this.control()());
 
-  readonly showError = computed(() => (this.state().touched() && this.state().invalid()) || !!this.serverError());
   readonly errorInfo = computed(() => {
     const se = this.serverError();
     return se ? { key: se } : firstErrorInfo(this.state().errors());
   });
+
+  readonly isDisabled = computed(() => this.disabledSig()());
+  readonly showError = computed(() => (this.state().touched() && this.state().invalid()) || !!this.serverError());
   readonly stringValue = computed(() => String(this.state().value() ?? ''));
 
   onInput(event: Event): void {

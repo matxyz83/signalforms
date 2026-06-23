@@ -25,26 +25,23 @@ function resolveOptions(opts: FieldOption[] | Observable<FieldOption[]> | undefi
 })
 export class ComboboxFieldComponent {
   readonly control     = input.required<FieldTree<unknown>>();
+  readonly state      = computed(() => this.control()());
+  readonly arrayValue = computed<FieldOption[]>(() => {
+    const v = this.state().value();
+    return Array.isArray(v) ? (v as FieldOption[]) : [];
+  });
   readonly config      = input.required<FormFieldConfig>();
-  readonly formValues  = input<Signal<Record<string, unknown>> | undefined>(undefined);
+
   readonly disabledSig = input<Signal<boolean>>(signal(false));
 
-  private readonly injector = inject(Injector);
-
-  readonly state      = computed(() => this.control()());
-  readonly isDisabled = computed(() => this.disabledSig()());
-  readonly loading    = signal(false);
-
-  private readonly filterTerm    = signal('');
-  private readonly searchInput$  = new Subject<string>();
-  private readonly searchResults = signal<FieldOption[]>([]);
   private readonly _openCount    = signal(0);
+  private readonly injector = inject(Injector);
+  readonly formValues  = input<Signal<Record<string, unknown>> | undefined>(undefined);
 
   private readonly stateValues = computed<Record<string, unknown>>(() => {
     const sig = this.formValues();
     return sig ? sig() : {};
   });
-
   private readonly resolvedOptionsObs = computed<Observable<FieldOption[]>>(() => {
     const cfg = this.config();
     const opts = cfg.options;
@@ -54,18 +51,20 @@ export class ComboboxFieldComponent {
     }
     return isObservable(opts) ? opts : of([]);
   });
-
   private readonly asyncBaseOptions = toSignal(
     toObservable(this.resolvedOptionsObs).pipe(switchMap(obs => obs)),
     { initialValue: [] as FieldOption[] },
   );
-
   private readonly baseOptions = computed<FieldOption[]>(() => {
     const opts = this.config().options;
     if (!opts) return [];
     if (Array.isArray(opts)) return opts;
     return this.asyncBaseOptions();
   });
+
+  private readonly filterTerm    = signal('');
+
+  private readonly searchResults = signal<FieldOption[]>([]);
 
   readonly displayData = computed<FieldOption[]>(() => {
     this._openCount();
@@ -93,15 +92,16 @@ export class ComboboxFieldComponent {
 
   readonly serverError = input<string | null>(null);
 
-  readonly arrayValue = computed<FieldOption[]>(() => {
-    const v = this.state().value();
-    return Array.isArray(v) ? (v as FieldOption[]) : [];
-  });
-  readonly showError = computed(() => (this.state().touched() && this.state().invalid()) || !!this.serverError());
   readonly errorInfo = computed(() => {
     const se = this.serverError();
     return se ? { key: se } : firstErrorInfo(this.state().errors());
   });
+
+  readonly isDisabled = computed(() => this.disabledSig()());
+
+  readonly loading    = signal(false);
+  readonly showError = computed(() => (this.state().touched() && this.state().invalid()) || !!this.serverError());
+  private readonly searchInput$  = new Subject<string>();
 
   constructor() {
     this.searchInput$.pipe(
@@ -132,17 +132,17 @@ export class ComboboxFieldComponent {
     }
   }
 
+  onMultiValueChange(value: unknown): void {
+    const s = this.state();
+    s.value.set((value as FieldOption[]) ?? []);
+    s.markAsDirty();
+  }
+
   onOpen(): void {
     this._openCount.update(n => n + 1);
     this.filterTerm.set('');
     this.searchResults.set([]);
     this.loading.set(false);
-  }
-
-  onMultiValueChange(value: unknown): void {
-    const s = this.state();
-    s.value.set((value as FieldOption[]) ?? []);
-    s.markAsDirty();
   }
 
   onValueChange(value: unknown): void {

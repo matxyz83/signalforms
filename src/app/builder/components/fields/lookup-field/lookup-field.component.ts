@@ -71,16 +71,16 @@ const LOOKUP_CREATE_KEY = '__lookup_create__';
   `],
 })
 export class LookupDialogComponent {
+  readonly loading    = signal(false);
+
   /** Impostato dal parent subito dopo dialogService.open() */
   lookupConfig!: LookupConfig;
 
-  private readonly dialogRef = inject(DialogRef);
-
   readonly plusIcon: SVGIcon = plusIcon;
 
-  readonly searchTerm = signal('');
   readonly results    = signal<Record<string, unknown>[]>([]);
-  readonly loading    = signal(false);
+  readonly searchTerm = signal('');
+  private readonly dialogRef = inject(DialogRef);
 
   private readonly searchInput$ = new Subject<string>();
 
@@ -100,6 +100,10 @@ export class LookupDialogComponent {
     });
   }
 
+  cancel(): void {
+    this.dialogRef.close(null);
+  }
+
   onSearch(term: string | null): void {
     const t = term ?? '';
     this.searchTerm.set(t);
@@ -112,21 +116,17 @@ export class LookupDialogComponent {
     this.searchInput$.next(t);
   }
 
+  /** Chiude il dialog con un sentinel; LookupFieldComponent chiamerà createFn dopo la chiusura. */
+  requestCreate(): void {
+    this.dialogRef.close({ [LOOKUP_CREATE_KEY]: this.searchTerm() });
+  }
+
   select(row: Record<string, unknown>): void {
     const option: FieldOption = {
       value: row[this.lookupConfig.valueField],
       label: String(row[this.lookupConfig.labelField] ?? ''),
     };
     this.dialogRef.close(option);
-  }
-
-  /** Chiude il dialog con un sentinel; LookupFieldComponent chiamerà createFn dopo la chiusura. */
-  requestCreate(): void {
-    this.dialogRef.close({ [LOOKUP_CREATE_KEY]: this.searchTerm() });
-  }
-
-  cancel(): void {
-    this.dialogRef.close(null);
   }
 }
 
@@ -140,31 +140,38 @@ export class LookupDialogComponent {
   styleUrl: './lookup-field.component.scss',
 })
 export class LookupFieldComponent {
-  readonly control     = input.required<FieldTree<unknown>>();
+  readonly clearIcon:  SVGIcon = xIcon;
   readonly config      = input.required<FormFieldConfig>();
+  readonly control     = input.required<FieldTree<unknown>>();
+
   readonly disabledSig = input<Signal<boolean>>(signal(false));
-
   readonly state      = computed(() => this.control()());
-  readonly isDisabled = computed(() => this.disabledSig()());
-
-  readonly serverError = input<string | null>(null);
 
   readonly displayValue = computed(() => {
     const v = this.state().value() as FieldOption | null;
     return v?.label ?? '';
   });
 
-  readonly showError = computed(() => (this.state().touched() && this.state().invalid()) || !!this.serverError());
+  readonly serverError = input<string | null>(null);
+
   readonly errorInfo = computed(() => {
     const se = this.serverError();
     return se ? { key: se } : firstErrorInfo(this.state().errors());
   });
+  readonly isDisabled = computed(() => this.disabledSig()());
 
   readonly searchIcon: SVGIcon = searchIcon;
-  readonly clearIcon:  SVGIcon = xIcon;
+  readonly showError = computed(() => (this.state().touched() && this.state().invalid()) || !!this.serverError());
 
   private readonly dialogService = inject(DialogService);
   private readonly transloco     = inject(TranslocoService);
+
+  clear(): void {
+    const s = this.state();
+    s.value.set(null);
+    s.markAsDirty();
+    s.markAsTouched();
+  }
 
   openDialog(): void {
     const cfg = this.config().lookupConfig;
@@ -197,13 +204,6 @@ export class LookupFieldComponent {
 
       this.applyValue(result as unknown as FieldOption);
     });
-  }
-
-  clear(): void {
-    const s = this.state();
-    s.value.set(null);
-    s.markAsDirty();
-    s.markAsTouched();
   }
 
   private applyValue(opt: FieldOption): void {

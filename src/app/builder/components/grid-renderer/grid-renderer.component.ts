@@ -26,11 +26,6 @@ export type TypedGridResult<T> = { data: T[]; total: number };
   styleUrl: './grid-renderer.component.scss',
 })
 export class GridRendererComponent<T extends Record<string, unknown>> {
-  readonly data    = input.required<TypedGridResult<T>>();
-  readonly columns = input.required<GridColumnConfig[]>();
-  readonly state   = input<State>(DEFAULT_STATE);
-  readonly editable  = input<boolean>(false);
-  readonly pageable   = input<boolean | PagerSettings>({ pageSizes: [5, 10, 20] })
   /**
    * Selezione controllata dall'esterno.
    * Array di valori chiave (es. ID) oppure di oggetti — abbinare a `selectionKey`.
@@ -38,21 +33,81 @@ export class GridRendererComponent<T extends Record<string, unknown>> {
    */
   readonly selection    = input<unknown[]>([]);
   /**
+   * Chiavi selezionate per Kendo [selectedKeys].
+   * Si resetta a selection() quando il parent cambia l'input;
+   * le scritture locali (click checkbox/riga) sovrascrivono fino al prossimo cambio di selection.
+   */
+  readonly _selectedKeys = linkedSignal<unknown[]>(() => this.selection());
+  readonly columns = input.required<GridColumnConfig[]>();
+  readonly createClick      = output<void>();
+  readonly data    = input.required<TypedGridResult<T>>();
+  readonly deleteClick      = output<T>();
+  readonly editable  = input<boolean>(false);
+
+  readonly editClick        = output<T>();
+  // Filtri manuali per colonne FieldOption[] (es. interessi), non gestibili via Kendo Data Query
+  private readonly _arrayFilters = signal(new Map<string, unknown>());
+  // Filtri time: confronto solo sulla parte oraria (hh/mm/ss) per evitare dipendenza dalla data del giorno
+  private readonly _timeFilters = signal(new Map<string, { value: Date; operator: string }>());
+  // Applica i filtri array e time sulla data già processata dal parent
+  readonly gridData = computed<TypedGridResult<T>>(() => {
+    const d = this.data();
+    const hasArrayFilters = this._arrayFilters().size > 0;
+    const hasTimeFilters  = this._timeFilters().size > 0;
+    if (!hasArrayFilters && !hasTimeFilters) return d;
+    const filtered = d.data.filter(item => {
+      for (const [field, value] of this._arrayFilters()) {
+        if (value == null) continue;
+        const arr = item[field];
+        if (!Array.isArray(arr) || !(arr as FieldOption[]).some(o => o.value === value)) return false;
+      }
+      for (const [field, { value, operator }] of this._timeFilters()) {
+        const cell = item[field];
+        if (cell == null || (typeof cell !== 'string' && !(cell instanceof Date))) return false;
+        if (!this.compareTime(cell as Date | string, value, operator)) return false;
+      }
+      return true;
+    });
+    return { data: filtered, total: filtered.length };
+  });
+  iconAdd: SVGIcon = plusIcon;
+
+  iconDelete: SVGIcon = trashIcon;
+  iconEdit: SVGIcon = pencilIcon;
+  /**
    * Campo (o funzione) da usare come chiave di confronto per la selezione.
    * Es. `'id'` → confronta `item.id` con i valori di `selection`.
    * Se omesso, usa l'identità dell'oggetto (comportamento default).
    */
   readonly selectionKey = input<string | ((item: T) => unknown) | undefined>(undefined);
 
-  readonly stateChange      = output<State>();
-  readonly createClick      = output<void>();
-  readonly editClick        = output<T>();
-  readonly deleteClick      = output<T>();
+  /**
+   * Estrattore chiave per Kendo [kendoGridSelectBy].
+   * Kendo vuole `(ctx: RowArgs) => any` (non `(item: T) => any`), quindi
+   * le funzioni utente vengono wrappate per estrarre `ctx.dataItem`.
+   */
+  readonly kendoSelectBy = computed<string | ((ctx: RowArgs) => unknown)>(() => {
+    const k = this.selectionKey();
+    if (k === undefined) return (ctx: RowArgs) => ctx.dataItem;
+    if (typeof k === 'string') return k;
+    return (ctx: RowArgs) => k(ctx.dataItem as T);
+  });
+
+  readonly pageable   = input<boolean | PagerSettings>({ pageSizes: [5, 10, 20] })
+
+  readonly pendingDelete = signal<T | null>(null);
+
+  readonly selectableSettings = computed<SelectableSettings | boolean>(() =>
+    this.editable()
+      ? { enabled: true, mode: 'single' }
+      : { enabled: true, mode: 'multiple', checkboxOnly: true },
+  );
+
   readonly selectionChange  = output<T[]>();
 
-  iconAdd: SVGIcon = plusIcon;
-  iconEdit: SVGIcon = pencilIcon;
-  iconDelete: SVGIcon = trashIcon;
+  readonly state   = input<State>(DEFAULT_STATE);
+
+  readonly stateChange      = output<State>();
 
   // Risoluzione reattiva delle opzioni filtro per le colonne combobox (statiche, Observable, factory)
   private readonly resolvedFilterOptions = toSignal(
@@ -82,91 +137,15 @@ export class GridRendererComponent<T extends Record<string, unknown>> {
     { initialValue: new Map<string, FieldOption[]>() },
   );
 
-  getFilterOptions(col: GridColumnConfig): FieldOption[] {
-    return this.resolvedFilterOptions().get(col.field) ?? [];
-  }
-
-  // Filtri manuali per colonne FieldOption[] (es. interessi), non gestibili via Kendo Data Query
-  private readonly _arrayFilters = signal(new Map<string, unknown>());
-
-  // Filtri time: confronto solo sulla parte oraria (hh/mm/ss) per evitare dipendenza dalla data del giorno
-  private readonly _timeFilters = signal(new Map<string, { value: Date; operator: string }>());
-
-  // Applica i filtri array e time sulla data già processata dal parent
-  readonly gridData = computed<TypedGridResult<T>>(() => {
-    const d = this.data();
-    const hasArrayFilters = this._arrayFilters().size > 0;
-    const hasTimeFilters  = this._timeFilters().size > 0;
-    if (!hasArrayFilters && !hasTimeFilters) return d;
-    const filtered = d.data.filter(item => {
-      for (const [field, value] of this._arrayFilters()) {
-        if (value == null) continue;
-        const arr = item[field];
-        if (!Array.isArray(arr) || !(arr as FieldOption[]).some(o => o.value === value)) return false;
-      }
-      for (const [field, { value, operator }] of this._timeFilters()) {
-        const cell = item[field];
-        if (cell == null || (typeof cell !== 'string' && !(cell instanceof Date))) return false;
-        if (!this.compareTime(cell as Date | string, value, operator)) return false;
-      }
-      return true;
-    });
-    return { data: filtered, total: filtered.length };
-  });
-
-  readonly pendingDelete = signal<T | null>(null);
-
-  /**
-   * Chiavi selezionate per Kendo [selectedKeys].
-   * Si resetta a selection() quando il parent cambia l'input;
-   * le scritture locali (click checkbox/riga) sovrascrivono fino al prossimo cambio di selection.
-   */
-  readonly _selectedKeys = linkedSignal<unknown[]>(() => this.selection());
-
-  /**
-   * Estrattore chiave per Kendo [kendoGridSelectBy].
-   * Kendo vuole `(ctx: RowArgs) => any` (non `(item: T) => any`), quindi
-   * le funzioni utente vengono wrappate per estrarre `ctx.dataItem`.
-   */
-  readonly kendoSelectBy = computed<string | ((ctx: RowArgs) => unknown)>(() => {
-    const k = this.selectionKey();
-    if (k === undefined) return (ctx: RowArgs) => ctx.dataItem;
-    if (typeof k === 'string') return k;
-    return (ctx: RowArgs) => k(ctx.dataItem as T);
-  });
-
-  readonly selectableSettings = computed<SelectableSettings | boolean>(() =>
-    this.editable()
-      ? { enabled: true, mode: 'single' }
-      : { enabled: true, mode: 'multiple', checkboxOnly: true },
-  );
-
-  /** Mostra il label di un valore FieldOption o FieldOption[] */
-  labelForValue(value: unknown): string {
-    if (value == null) return '';
-    if (Array.isArray(value)) {
-      return (value as FieldOption[]).map(o => o.label ?? String(o.value)).join(', ');
-    }
-    const opt = value as FieldOption;
-    return String(opt.label ?? opt.value ?? '');
-  }
-
-  comboFilterValue(col: GridColumnConfig): unknown {
-    if (col.filterOperator === 'contains') {
-      return this._arrayFilters().get(col.field) ?? null;
-    }
-    // Lo stato memorizzato usa già filterField se presente (remappato da onStateChange)
-    const key = col.filterField ?? `${col.field}.value`;
-    const filters = (this.state().filter?.filters ?? []) as FilterDescriptor[];
-    return filters.find(f => f.field === key)?.value ?? null;
-  }
-
   applyComboFilter(value: unknown, col: GridColumnConfig): void {
     if (col.filterOperator === 'contains') {
       // FieldOption[] — filtro interno al componente su .value di ogni elemento dell'array
       this._arrayFilters.update(m => {
         const next = new Map(m);
-        value != null ? next.set(col.field, value) : next.delete(col.field);
+        if(value != null)
+          next.set(col.field, value)
+        else
+          next.delete(col.field);
         return next;
       });
     } else {
@@ -185,6 +164,34 @@ export class GridRendererComponent<T extends Record<string, unknown>> {
         },
       } as DataStateChangeEvent);
     }
+  }
+
+  applyDateFilter(value: Date | null, col: GridColumnConfig): void {
+    const current = this.state();
+    const others = ((current.filter?.filters ?? []) as FilterDescriptor[])
+      .filter(f => f.field !== col.field);
+    this.onStateChange({
+      ...current,
+      skip: 0,
+      filter: {
+        logic: current.filter?.logic ?? 'and',
+        filters: value != null
+          ? [...others, { field: col.field, operator: col.filterOperator ?? 'eq', value }]
+          : others,
+      },
+    } as DataStateChangeEvent);
+  }
+
+  applyTimeFilter(value: Date | null, col: GridColumnConfig): void {
+    this._timeFilters.update(m => {
+      const next = new Map(m);
+      if (value != null) {
+        next.set(col.field, { value, operator: col.filterOperator ?? 'eq' });
+      } else {
+        next.delete(col.field);
+      }
+      return next;
+    });
   }
 
   /**
@@ -209,99 +216,40 @@ export class GridRendererComponent<T extends Record<string, unknown>> {
     return raw.startsWith('{0:') ? raw : `{0:${raw}}`;
   }
 
+  comboFilterValue(col: GridColumnConfig): unknown {
+    if (col.filterOperator === 'contains') {
+      return this._arrayFilters().get(col.field) ?? null;
+    }
+    // Lo stato memorizzato usa già filterField se presente (remappato da onStateChange)
+    const key = col.filterField ?? `${col.field}.value`;
+    const filters = (this.state().filter?.filters ?? []) as FilterDescriptor[];
+    return filters.find(f => f.field === key)?.value ?? null;
+  }
+
+  confirmDelete(): void {
+    const item = this.pendingDelete();
+    if (item) this.deleteClick.emit(item);
+    this.pendingDelete.set(null);
+  }
+
   dateFilterValue(col: GridColumnConfig): Date | null {
     const filters = (this.state().filter?.filters ?? []) as FilterDescriptor[];
     const v = filters.find(f => f.field === col.field)?.value;
     return v instanceof Date ? v : null;
   }
 
-  applyDateFilter(value: Date | null, col: GridColumnConfig): void {
-    const current = this.state();
-    const others = ((current.filter?.filters ?? []) as FilterDescriptor[])
-      .filter(f => f.field !== col.field);
-    this.onStateChange({
-      ...current,
-      skip: 0,
-      filter: {
-        logic: current.filter?.logic ?? 'and',
-        filters: value != null
-          ? [...others, { field: col.field, operator: col.filterOperator ?? 'eq', value }]
-          : others,
-      },
-    } as DataStateChangeEvent);
+  getFilterOptions(col: GridColumnConfig): FieldOption[] {
+    return this.resolvedFilterOptions().get(col.field) ?? [];
   }
 
-  timeFilterValue(col: GridColumnConfig): Date | null {
-    return this._timeFilters().get(col.field)?.value ?? null;
-  }
-
-  applyTimeFilter(value: Date | null, col: GridColumnConfig): void {
-    this._timeFilters.update(m => {
-      const next = new Map(m);
-      if (value != null) {
-        next.set(col.field, { value, operator: col.filterOperator ?? 'eq' });
-      } else {
-        next.delete(col.field);
-      }
-      return next;
-    });
-  }
-
-  private timeToMs(v: Date | string): number {
-    if (v instanceof Date) {
-      return v.getHours() * 3600000 + v.getMinutes() * 60000 + v.getSeconds() * 1000;
+  /** Mostra il label di un valore FieldOption o FieldOption[] */
+  labelForValue(value: unknown): string {
+    if (value == null) return '';
+    if (Array.isArray(value)) {
+      return (value as FieldOption[]).map(o => o.label ?? String(o.value)).join(', ');
     }
-    const [h = 0, m = 0, s = 0] = (v as string).split(':').map(Number);
-    return h * 3600000 + m * 60000 + s * 1000;
-  }
-
-  private compareTime(a: Date | string, b: Date, op: string): boolean {
-    const aMs = this.timeToMs(a);
-    const bMs = this.timeToMs(b);
-    switch (op) {
-      case 'eq':  return aMs === bMs;
-      case 'neq': return aMs !== bMs;
-      case 'gte': return aMs >= bMs;
-      case 'gt':  return aMs >  bMs;
-      case 'lte': return aMs <= bMs;
-      case 'lt':  return aMs <  bMs;
-      default:    return aMs === bMs;
-    }
-  }
-
-  onStateChange(event: DataStateChangeEvent): void {
-    let s: State = this.remapFilterFields(event);
-    if (this.pageable() === false) {
-      const { skip: _skip, take: _take, ...rest } = s;
-      s = rest;
-    }
-    this.stateChange.emit(s);
-  }
-
-  private remapFilterFields(state: State): State {
-    if (!state.filter?.filters?.length) return state;
-    const remap = new Map(
-      this.columns()
-        .filter(c => c.filterField)
-        .map(c => [`${c.field}.value`, c.filterField!]),
-    );
-    if (!remap.size) return state;
-    return {
-      ...state,
-      filter: {
-        ...state.filter,
-        filters: (state.filter.filters as FilterDescriptor[]).map(f =>
-          remap.has(f.field as string) ? { ...f, field: remap.get(f.field as string)! } : f,
-        ),
-      },
-    };
-  }
-
-  /** Estrae la chiave di un item secondo selectionKey (campo, funzione, o identity). */
-  private keyOf(item: T): unknown {
-    const k = this.selectionKey();
-    if (k === undefined) return item;
-    return typeof k === 'function' ? k(item) : (item as Record<string, unknown>)[k as string];
+    const opt = value as FieldOption;
+    return String(opt.label ?? opt.value ?? '');
   }
 
   onSelectionChange(event: SelectionEvent): void {
@@ -323,9 +271,64 @@ export class GridRendererComponent<T extends Record<string, unknown>> {
     );
   }
 
-  confirmDelete(): void {
-    const item = this.pendingDelete();
-    if (item) this.deleteClick.emit(item);
-    this.pendingDelete.set(null);
+  onStateChange(event: DataStateChangeEvent): void {
+    let s: State = this.remapFilterFields(event);
+    if (this.pageable() === false) {
+      const { skip: _skip, take: _take, ...rest } = s;
+      s = rest;
+    }
+    this.stateChange.emit(s);
+  }
+
+  timeFilterValue(col: GridColumnConfig): Date | null {
+    return this._timeFilters().get(col.field)?.value ?? null;
+  }
+
+  private compareTime(a: Date | string, b: Date, op: string): boolean {
+    const aMs = this.timeToMs(a);
+    const bMs = this.timeToMs(b);
+    switch (op) {
+      case 'eq':  return aMs === bMs;
+      case 'neq': return aMs !== bMs;
+      case 'gte': return aMs >= bMs;
+      case 'gt':  return aMs >  bMs;
+      case 'lte': return aMs <= bMs;
+      case 'lt':  return aMs <  bMs;
+      default:    return aMs === bMs;
+    }
+  }
+
+  /** Estrae la chiave di un item secondo selectionKey (campo, funzione, o identity). */
+  private keyOf(item: T): unknown {
+    const k = this.selectionKey();
+    if (k === undefined) return item;
+    return typeof k === 'function' ? k(item) : (item as Record<string, unknown>)[k as string];
+  }
+
+  private remapFilterFields(state: State): State {
+    if (!state.filter?.filters?.length) return state;
+    const remap = new Map(
+      this.columns()
+        .filter(c => c.filterField)
+        .map(c => [`${c.field}.value`, c.filterField!]),
+    );
+    if (!remap.size) return state;
+    return {
+      ...state,
+      filter: {
+        ...state.filter,
+        filters: (state.filter.filters as FilterDescriptor[]).map(f =>
+          remap.has(f.field as string) ? { ...f, field: remap.get(f.field as string)! } : f,
+        ),
+      },
+    };
+  }
+
+  private timeToMs(v: Date | string): number {
+    if (v instanceof Date) {
+      return v.getHours() * 3600000 + v.getMinutes() * 60000 + v.getSeconds() * 1000;
+    }
+    const [h = 0, m = 0, s = 0] = (v as string).split(':').map(Number);
+    return h * 3600000 + m * 60000 + s * 1000;
   }
 }

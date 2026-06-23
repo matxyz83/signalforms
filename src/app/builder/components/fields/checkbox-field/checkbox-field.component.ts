@@ -15,20 +15,20 @@ import { firstErrorInfo } from '../../../utils/field-error';
 })
 export class CheckboxFieldComponent {
   readonly control     = input.required<FieldTree<unknown>>();
+  readonly state      = computed(() => this.control()());
+  readonly boolValue = computed(() => Boolean(this.state().value()));
+
   readonly config      = input.required<FormFieldConfig>();
   readonly disabledSig = input<Signal<boolean>>(signal(false));
 
-  readonly state      = computed(() => this.control()());
-  readonly isDisabled = computed(() => this.disabledSig()());
-
   readonly serverError = input<string | null>(null);
 
-  readonly boolValue = computed(() => Boolean(this.state().value()));
-  readonly showError = computed(() => (this.state().touched() && this.state().invalid()) || !!this.serverError());
   readonly errorInfo = computed(() => {
     const se = this.serverError();
     return se ? { key: se } : firstErrorInfo(this.state().errors());
   });
+  readonly isDisabled = computed(() => this.disabledSig()());
+  readonly showError = computed(() => (this.state().touched() && this.state().invalid()) || !!this.serverError());
 
   onChange(event: Event): void {
     const s = this.state();
