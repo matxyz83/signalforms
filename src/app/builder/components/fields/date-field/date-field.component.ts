@@ -42,14 +42,19 @@ export class DateFieldComponent {
     }
   });
 
+  readonly serverError = input<string | null>(null);
+
   readonly dateValue = computed(() => {
     const v = this.state().value();
     if (v instanceof Date) return v;
     if (typeof v === 'string' && v) return this.parseString(v);
     return null;
   });
-  readonly showError = computed(() => this.state().touched() && this.state().invalid());
-  readonly errorInfo = computed(() => firstErrorInfo(this.state().errors()));
+  readonly showError = computed(() => (this.state().touched() && this.state().invalid()) || !!this.serverError());
+  readonly errorInfo = computed(() => {
+    const se = this.serverError();
+    return se ? { key: se } : firstErrorInfo(this.state().errors());
+  });
 
   onValueChange(value: Date | null): void {
     const s = this.state();

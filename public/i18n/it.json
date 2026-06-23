@@ -113,8 +113,15 @@
         "label": "Ruolo"
       }
     },
-    "dynamic":{
+    "dynamic": {
       "level": "Livello"
+    },
+    "section": {
+      "anagrafica": "Anagrafica",
+      "indirizzo":  "Indirizzo",
+      "dateOrari":  "Date e orari",
+      "preferenze": "Preferenze",
+      "contatti":   "Contatti aggiuntivi"
     }
   },
   "columns": {

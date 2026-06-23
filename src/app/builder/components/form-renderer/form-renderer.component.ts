@@ -12,7 +12,7 @@ import { ArrayFieldComponent } from '../fields/array-field/array-field.component
 import { DateFieldComponent } from '../fields/date-field/date-field.component';
 import { LookupFieldComponent } from '../fields/lookup-field/lookup-field.component';
 
-const FIELD_COMPONENTS: Record<FieldType, Type<unknown>> = {
+const FIELD_COMPONENTS: Partial<Record<FieldType, Type<unknown>>> = {
   [FieldType.Input]:    InputFieldComponent,
   [FieldType.Textarea]: TextareaFieldComponent,
   [FieldType.Checkbox]: CheckboxFieldComponent,
@@ -34,59 +34,46 @@ const FIELD_COMPONENTS: Record<FieldType, Type<unknown>> = {
 })
 export class FormRendererComponent<T> {
   readonly config   = input.required<FormFieldConfig[]>();
-  /** Accettato come unknown per compatibilità con qualsiasi FieldTree<T> */
   readonly form     = input.required<FieldTree<T>>();
   readonly formId   = input<string>('form-renderer');
-  /** Numero di colonne del layout grid. Default 1 (singola colonna, comportamento invariato). */
   readonly columns  = input<number>(1);
+  /**
+   * Errori server-side per singolo campo: `{ email: 'Email già in uso' }`.
+   * Mostrati immediatamente (senza bisogno di touched), sovrascrivono gli errori
+   * di validazione. Il parent li gestisce e li azzera quando l'utente modifica il campo.
+   */
+  readonly serverErrors = input<Record<string, string>>({});
   readonly formSubmit = output<T>();
 
-  /**
-   * Cache stabile dei FieldTree per campo.
-   *
-   * Il Proxy di FieldTree legge il model signal come side effect ogni volta che
-   * si accede a `formTree[fieldName]`. Se questo accesso avviene dentro un computed(),
-   * il model diventa una dipendenza della cache: ogni `value.set(...)` (es. svuotare
-   * la combobox) invalida la cache → il Proxy può restituire undefined durante la
-   * transizione → "fieldFor(...) is not a function".
-   *
-   * `untracked()` taglia questa dipendenza: la cache si ricalcola solo quando
-   * form o config cambiano, non a ogni modifica di valore.
-   */
+  readonly FieldType = FieldType;
+
+  private readonly isFieldNode = (f: FormFieldConfig) =>
+    f.type !== FieldType.Section && f.showInForm !== false;
+
   private readonly fieldTreeCache = computed(() => {
     const formTree = this.form() as Record<string, unknown>;
     return new Map<string, FieldTree<unknown>>(
       this.config()
-        .filter(f => f.showInForm !== false)
+        .filter(this.isFieldNode)
         .map(f => [f.field, untracked(() => formTree[f.field]) as FieldTree<unknown>]),
     );
   });
 
-  /**
-   * Signal stabile dei valori correnti del form.
-   * Passato per riferimento ai field component — si aggiorna reattivamente quando
-   * qualsiasi valore cambia, senza invalidare inputsCache (il riferimento è stabile).
-   */
   readonly formValuesSignal: Signal<Record<string, unknown>> = computed(() => {
     const tree = this.form() as any;
     const result: Record<string, unknown> = {};
     for (const f of this.config()) {
+      if (f.type === FieldType.Section) continue;
       const ft = untracked(() => tree[f.field]) as FieldTree<unknown> | undefined;
       if (ft) result[f.field] = ft().value();
     }
     return result;
   });
 
-  /**
-   * Per ogni campo: Signal<boolean> stabile che indica se il campo è readonly.
-   * - `readonly: true/false` → signal statico
-   * - `readonly: (values) => boolean` → computed reattivo su formValuesSignal
-   * Il riferimento al signal è stabile: inputsCache non si invalida al cambio valori.
-   */
   private readonly disabledSignals = computed(() =>
     new Map<string, Signal<boolean>>(
       this.config()
-        .filter(f => f.showInForm !== false)
+        .filter(this.isFieldNode)
         .map(f => {
           const r = f.disabled;
           if (!r) return [f.field, signal(false) as Signal<boolean>];
@@ -97,20 +84,16 @@ export class FormRendererComponent<T> {
     ),
   );
 
-  /**
-   * Cache stabile degli oggetti inputs per NgComponentOutlet.
-   * Evita che setInput() venga chiamato con un nuovo oggetto ad ogni CD,
-   * il che riscatenava il computed `state` nei field component.
-   * `formValues` e `disabledSig` sono riferimenti a signal (stabili), non valori.
-   */
-  private readonly inputsCache = computed(() =>
-    new Map<string, Record<string, unknown>>(
+  private readonly inputsCache = computed(() => {
+    const se = this.serverErrors();
+    return new Map<string, Record<string, unknown>>(
       this.config()
-        .filter(f => f.showInForm !== false)
+        .filter(this.isFieldNode)
         .map(f => {
           const inputs: Record<string, unknown> = {
             control: this.fieldTreeCache().get(f.field)!,
             config: f,
+            serverError: se[f.field] ?? null,
           };
           if (f.type !== FieldType.Array) {
             inputs['disabledSig'] = this.disabledSignals().get(f.field)!;
@@ -120,28 +103,21 @@ export class FormRendererComponent<T> {
           }
           return [f.field, inputs];
         }),
-    ),
-  );
+    );
+  });
 
   componentFor(field: FormFieldConfig): Type<unknown> {
     return FIELD_COMPONENTS[field.type] ?? InputFieldComponent;
   }
 
   fieldFor(field: FormFieldConfig): FieldTree<unknown> | undefined {
-    const fieldTree = this.fieldTreeCache().get(field.field);
-    if(!fieldTree)
-      console.debug(`${field.field} not exists`);
-    return fieldTree;
+    return this.fieldTreeCache().get(field.field);
   }
 
   inputsFor(field: FormFieldConfig): Record<string, unknown> {
     return this.inputsCache().get(field.field)!;
   }
 
-  /**
-   * Errori a livello form (da validateTree / options.validators).
-   * Mostrati solo dopo il primo tentativo di submit (root touched).
-   */
   readonly formErrors = computed<ValidationError[]>(() => {
     const rootState = (this.form())();
     if (!rootState.touched()) return [];
@@ -151,7 +127,6 @@ export class FormRendererComponent<T> {
   onSubmit(event: Event): void {
     event.preventDefault();
     const rootState = (this.form())();
-    // Marca tutto il form come touched per mostrare gli errori dei campi
     rootState.markAsTouched();
     if (rootState.invalid()) return;
     this.formSubmit.emit(rootState.value());

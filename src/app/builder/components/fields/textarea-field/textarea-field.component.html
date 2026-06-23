@@ -12,7 +12,9 @@
     [disabled]="isDisabled()"
     rows="4"
   ></textarea>
-  @if (showError()) {
-    <kendo-formerror>{{ errorInfo().key | transloco: errorInfo().params }}</kendo-formerror>
-  }
+  <div class="form-error-host">
+    @if (showError()) {
+      <kendo-formerror>{{ errorInfo().key | transloco: errorInfo().params }}</kendo-formerror>
+    }
+  </div>
 </div>

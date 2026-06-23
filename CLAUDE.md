@@ -81,7 +81,20 @@ src/app/
 
 `signal-forms.types.ts` e `signal-forms.impl.ts` sono stati **eliminati** — sostituiti dall'API ufficiale `@angular/forms/signals`.
 
-**`FieldType` disponibili:** `Input`, `Select`, `Combobox`, `Checkbox`, `Textarea`, `Array`, `Date`, `DateTime`, `Time`
+**`FieldType` disponibili:** `Input`, `Select`, `Combobox`, `Checkbox`, `Textarea`, `Array`, `Date`, `DateTime`, `Time`, `Lookup`, `Section`
+
+**`FieldType.Section`** — separatore visivo con label opzionale. Non crea nodi nel `FieldTree`, non compare nel payload serializzato. Usato esclusivamente per raggruppare campi visivamente nel renderer.
+- Per default occupa tutta la larghezza (`colSpan ?? columns()`).
+- Accetta `label` (chiave Transloco), `colSpan`, `colStart` come gli altri campi.
+- Il campo `field` deve essere univoco nella config (usare prefisso `_s_`, es. `_s_anagrafica`).
+
+```typescript
+{ type: FieldType.Section, field: '_s_anagrafica', label: 'fields.section.anagrafica' },
+{ type: FieldType.Input,   field: 'nome',          label: 'fields.nome.label' },
+{ type: FieldType.Input,   field: 'email',         label: 'fields.email.label' },
+{ type: FieldType.Section, field: '_s_credenziali', label: 'fields.section.credenziali' },
+{ type: FieldType.Input,   field: 'password',      label: 'fields.password.label' },
+```
 
 **`OptionsLoader`** — type alias per i tre formati supportati da `options`:
 ```typescript
@@ -190,25 +203,46 @@ readonly state = computed(() => this.control()());  // → FieldState<unknown>
 File: `form-renderer.component.{ts,html,scss}`
 
 - `NgComponentOutlet` + `[ngComponentOutletInputs]` per rendering dinamico
-- `FIELD_COMPONENTS: Record<FieldType, Type<unknown>>` come registry statico
+- `FIELD_COMPONENTS: Partial<Record<FieldType, Type<unknown>>>` come registry statico; `Section` non è nel registry (gestito inline nel template)
 - `form` input tipizzato `unknown` (accetta qualsiasi `FieldTree<T>`)
-- `fieldFor(field)` → `(form as any)[field.field]` per accesso dinamico al `FieldTree` del campo
-- Visibilità nel template: `@if (!fieldFor(field)().hidden())`
+- `fieldFor(field)` → `fieldTreeCache().get(field.field)` per accesso al `FieldTree` del campo (undefined per Section)
+- Visibilità nel template: `@if (!fieldFor(field)?.()?.hidden())` (opzionale per Section)
 - **`formValuesSignal`** — `computed()` che legge `ft().value()` di ogni campo; il riferimento è stabile (passato come signal, non come valore) → `inputsCache` non si invalida ad ogni digitazione. Passato solo a `Select` e `Combobox` field (gli unici che dichiarano `formValues` input).
-- **`columns`** — `input<number>(1)`; controlla il numero di colonne del layout CSS Grid tramite la custom property `--form-columns`. Default `1` (singola colonna, comportamento invariato). Usare insieme a `colSpan` nei campi per il layout multi-colonna:
+- **`columns`** — `input<number>(1)`; controlla il numero di colonne del layout CSS Grid tramite la custom property `--form-columns`. Default `1` (singola colonna, comportamento invariato). Usare insieme a `colSpan` nei campi per il layout multi-colonna.
+- **`serverErrors`** — `input<Record<string, string>>({})` — errori server-side per campo (`{ email: 'Email già in uso' }`). Mostrati immediatamente (senza `touched`), sovrascrivono gli errori di validazione. Il parent li gestisce come `WritableSignal<Record<string, string>>`:
 
 ```html
-<app-form-renderer [columns]="2" [config]="formConfig" [form]="form" (formSubmit)="..." />
+<app-form-renderer
+  [columns]="2"
+  [config]="formConfig"
+  [form]="form"
+  [serverErrors]="serverErrors()"
+  (formSubmit)="onSubmit($event)"
+/>
 ```
 
 ```typescript
-// Nella form config — campi che occupano tutta la larghezza in layout a 2 colonne
-{ type: FieldType.Textarea, field: 'note',     label: '...', colSpan: 2 }
-{ type: FieldType.Array,    field: 'contatti', label: '...', colSpan: 2 }
+// Pattern completo — errori server + sezioni
+readonly serverErrors = signal<Record<string, string>>({});
 
+onSubmit(payload): void {
+  this.api.save(payload).subscribe({
+    next: () => { this.serverErrors.set({}); /* salva */ },
+    error: (err) => this.serverErrors.set(err.fieldErrors),
+  });
+}
+cancelForm(): void {
+  this.serverErrors.set({});
+  this.showForm.set(false);
+}
+
+// Nella form config
+{ type: FieldType.Section,  field: '_s_anagrafica', label: 'fields.section.anagrafica' },
+{ type: FieldType.Input,    field: 'nome',          label: 'fields.nome.label' },
+{ type: FieldType.Textarea, field: 'note',          label: '...', colSpan: 2 }
+{ type: FieldType.Array,    field: 'contatti',      label: '...', colSpan: 2 }
 // Layout Bootstrap-like con columns=12: campo centrato (colonne 3–7, 5 slot)
 { type: FieldType.Input, field: 'codice', label: '...', colStart: 3, colSpan: 5 }
-// → genera grid-column: 3 / span 5; i 4 slot rimanenti dopo restano vuoti
 ```
 
 ### Form Dialog (`src/app/builder/components/form-dialog/`)
@@ -576,6 +610,9 @@ type AnyValidator = ValidatorConfig | CustomValidatorFn | AsyncValidatorConfig;
 - **`RowRendererComponent` — nessun `formValues`**: i field Select/Combobox dentro un array non ricevono `formValues`; le opzioni a cascata (lambda `(state) => …`) non funzionano all'interno di `arrayConfig`. Solo le opzioni statiche e Observable sono supportate negli array.
 - **Config form e grid separate**: `formConfig: FormFieldConfig[]` e `gridColumns: GridColumnConfig[]` sono array indipendenti. Non esiste un metodo `buildGridColumns` — la griglia ha la propria configurazione esplicita. Questo evita coupling tra le due interfacce (form e grid possono essere usate indipendentemente).
 - **`serializeValue` esclude solo `hidden()`**: i campi con `showInForm: false` vengono comunque inclusi nel payload serializzato (es. `id`). L'esclusione dal render è responsabilità del renderer (`field.showInForm !== false`), non del serializzatore.
+- **`FieldType.Section` — skip in engine e renderer**: `applyFieldSchema` filtra `f.type !== FieldType.Section` prima di chiamare `validate()`; `fieldTreeCache`, `inputsCache` e `disabledSignals` fanno lo stesso. Nel template il renderer usa un branch separato `@if (field.type === FieldType.Section)` che non chiama `fieldFor()`. Il registry `FIELD_COMPONENTS` è `Partial<Record<...>>` — Section non ha entry e non viene mai usata con `NgComponentOutlet`.
+- **`serverErrors` — pattern con signal**: il parent dichiara `readonly serverErrors = signal<Record<string, string>>({})`, lo passa via `[serverErrors]="serverErrors()"`. Ogni field component riceve `serverError: string | null` via `inputsCache` e lo controlla in `showError` e `errorInfo`. Azzerare sempre al submit riuscito e al cancel: `this.serverErrors.set({})`. Il cambio di `serverErrors` invalida `inputsCache` (che lo legge in computed) → Angular chiama `setInput('serverError', ...)` su ogni field.
+- **Layout errori stabile — `.form-error-host`**: ogni field HTML avvolge `@if (showError())` in `<div class="form-error-host">` con `min-height: 1.5em` nel SCSS del componente. Lo spazio è sempre riservato, `kendo-formerror` appare/scompare al suo interno senza spostare i campi adiacenti.
 - **ViewModel — quando usarlo**: obbligatorio solo quando il dominio ha tipi non gestibili dal componente: `number` → `FieldOption | null` per Select; `Date` nella grid con filtro date-picker Kendo. Non serve per stringhe ISO date/datetime/time — `DateFieldComponent` le gestisce direttamente. Creare `type FooView = Omit<Foo, 'campo1'|'campo2'> & { campo1: TipoForm1; campo2: TipoForm2 }` con `toView/fromView` static. Il signal passato a `buildForm` si chiama `formModel`.
 - **`gridData` e ViewModel**: quando si usa un ViewModel, `gridData` mappa i dati dominio attraverso `toView` prima di `process()`. La grid chiama `labelForValue()` sui valori — che devono essere `FieldOption`, non primitivi. Dipendenze reattive (es. `weekdays()`) vanno lette dentro il `computed` di `gridData` affinché la griglia si aggiorni al cambio lingua.
 - **Luxon — API usata**: `import { DateTime, Info } from 'luxon'`. `DateTime.fromFormat(s, fmt).toJSDate()` per parsare; `DateTime.fromJSDate(d).toFormat(fmt)` per serializzare. `DateTime.fromISO(s)` per stringhe ISO. `Info.weekdays('long', { locale })` per nomi giorni localizzati (array Lun–Dom). Usare sempre formati espliciti per ASP.NET TimeOnly (`'HH:mm:ss'`).

@@ -38,7 +38,7 @@ export class FormEngineService {
     config: FormFieldConfig[],
     model: WritableSignal<any>,
   ): void {
-    for (const field of config) {
+    for (const field of config.filter(f => f.type !== FieldType.Section)) {
       const path = schemaPath[field.field];
 
       // No-op validator ensures Angular registers this field's FieldTree node.

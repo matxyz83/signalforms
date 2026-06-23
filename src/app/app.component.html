@@ -41,6 +41,7 @@
         [config]="formConfig"
         [form]="form"
         [columns]="3"
+        [serverErrors]="formServerErrors()"
         (formSubmit)="onFormSubmit($event)"
       />
     </app-form-dialog>

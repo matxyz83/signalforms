@@ -11,6 +11,7 @@ export enum FieldType {
   DateTime = 'datetime',
   Time     = 'time',
   Lookup   = 'lookup',
+  Section  = 'section',
 }
 
 export enum ValidatorType {

@@ -9,7 +9,9 @@
     [disabled]="isDisabled()"
   />
   <kendo-label [for]="config().field" [text]="config().label | transloco" />
-  @if (showError()) {
-    <kendo-formerror>{{ errorInfo().key | transloco: errorInfo().params }}</kendo-formerror>
-  }
+  <div class="form-error-host">
+    @if (showError()) {
+      <kendo-formerror>{{ errorInfo().key | transloco: errorInfo().params }}</kendo-formerror>
+    }
+  </div>
 </div>

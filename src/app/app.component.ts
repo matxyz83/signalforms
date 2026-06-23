@@ -159,6 +159,7 @@ export class AppComponent {
     AppComponent.toView(EMPTY, weekdaysForLocale(this.transloco.getActiveLang())),
   );
   readonly formConfig: FormFieldConfig[] = this.buildFormConfig();
+  readonly formServerErrors = signal<Record<string, string>>({});
   readonly form = this.engine.buildForm(this.formModel, this.formConfig, {
     validators: [
       values => values.termini === false && values.nome !== ''
@@ -241,8 +242,13 @@ export class AppComponent {
   }
 
   onFormSubmit(payload: PersonFormView): void {
-    // fromView converte PersonFormView → PersonForm (weekday: FieldOption → number).
     const person = AppComponent.fromView(payload);
+    // Simula errore server: "Admin" è un nome riservato.
+    if (person.nome === 'Admin') {
+      this.formServerErrors.set({ nome1: 'Questo nome è riservato (errore simulato dal server)' });
+      return;
+    }
+    this.formServerErrors.set({});
     if (this.isNew()) {
       const nextId = Math.max(0, ...this.people().map(p => p.id ?? 0)) + 1;
       const created = { ...person, id: nextId };
@@ -256,6 +262,7 @@ export class AppComponent {
   }
 
   cancelForm(): void {
+    this.formServerErrors.set({});
     this.showForm.set(false);
   }
 
@@ -285,6 +292,7 @@ export class AppComponent {
         type: FieldType.Input, field: 'id', label: 'fields.id.label',
         inputType: 'number', showInForm: false,
       },
+      { type: FieldType.Section, field: '_s_anagrafica', label: 'fields.section.anagrafica' },
       {
         type: FieldType.Input, field: 'nome', label: 'fields.nome.label',
         placeholder: 'fields.nome.placeholder', inputType: 'text',
@@ -338,6 +346,7 @@ export class AppComponent {
           { type: ValidatorType.MinLength, value: 11 },
         ],
       },
+      { type: FieldType.Section, field: '_s_indirizzo', label: 'fields.section.indirizzo' },
       {
         type: FieldType.Select, field: 'regione', label: 'fields.regione.label',
         options: this.loader.loadOptions('https://raw.githubusercontent.com/Samurai016/Comuni-ITA/refs/heads/master/data/regioni.json').pipe(
@@ -355,6 +364,7 @@ export class AppComponent {
         validators: [{ type: ValidatorType.MaxLength, value: 500 }],
         colSpan: 2,
       },
+      { type: FieldType.Section, field: '_s_dateOrari', label: 'fields.section.dateOrari' },
       {
         type: FieldType.Date, field: 'dataNascita', label: 'fields.dataNascita.label',
         validators: [{ type: ValidatorType.Required }],
@@ -379,6 +389,7 @@ export class AppComponent {
         type: FieldType.DateTime, field: 'ultimoAccesso', label: 'fields.ultimoAccesso.label',
         placeholder: 'fields.ultimoAccesso.placeholder',
       },
+      { type: FieldType.Section, field: '_s_preferenze', label: 'fields.section.preferenze' },
       {
         type: FieldType.Combobox, field: 'interessi', label: 'fields.interessi.label',
         placeholder: 'fields.interessi.placeholder', multiple: true, colSpan: 2,
@@ -404,8 +415,9 @@ export class AppComponent {
         label: 'fields.termini.label',
         validators: [{ type: ValidatorType.Required }],
       },
+      { type: FieldType.Section, field: '_s_contatti', label: 'fields.section.contatti' },
       {
-        type: FieldType.Array, field: 'contatti', label: 'fields.contatti.label', colSpan: 2,
+        type: FieldType.Array, field: 'contatti', label: 'fields.contatti.label', colSpan: 3,
         arrayConfig: [
           {
             type: FieldType.Input, field: 'nome', label: 'fields.contatti.nome.label',

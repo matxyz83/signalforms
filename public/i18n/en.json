@@ -112,6 +112,13 @@
       "ruolo": {
         "label": "Role"
       }
+    },
+    "section": {
+      "anagrafica": "Personal data",
+      "indirizzo":  "Address",
+      "dateOrari":  "Dates & times",
+      "preferenze": "Preferences",
+      "contatti":   "Additional contacts"
     }
   },
   "columns": {

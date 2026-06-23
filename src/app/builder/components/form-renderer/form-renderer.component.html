@@ -1,13 +1,31 @@
 <form [id]="formId()" class="form" (submit)="onSubmit($event)" novalidate [style.--form-columns]="columns()">
   @for (field of config(); track field.field) {
-    @if (field.showInForm !== false && !fieldFor(field)?.()?.hidden()) {
-      <div class="form-field-wrapper" [style.grid-column]="field.colStart ? field.colStart + ' / span ' + (field.colSpan ?? 1) : 'span ' + (field.colSpan ?? 1)">
-        <ng-container
-          [ngComponentOutlet]="componentFor(field)"
-          [ngComponentOutletInputs]="inputsFor(field)"
-        />
-      </div>
+    @if (field.showInForm !== false) {
+      @if (field.type === FieldType.Section) {
+        <div class="form-section"
+          [style.grid-column]="field.colStart
+            ? field.colStart + ' / span ' + (field.colSpan ?? columns())
+            : 'span ' + (field.colSpan ?? columns())">
+          @if (field.label) {
+            <span class="form-section-label">{{ field.label | transloco }}</span>
+          }
+        </div>
+      } @else if (!fieldFor(field)?.()?.hidden()) {
+        <div class="form-field-wrapper"
+          [style.grid-column]="field.colStart
+            ? field.colStart + ' / span ' + (field.colSpan ?? 1)
+            : 'span ' + (field.colSpan ?? 1)">
+          <ng-container
+            [ngComponentOutlet]="componentFor(field)"
+            [ngComponentOutletInputs]="inputsFor(field)"
+          />
+        </div>
+      }
     }
+  }
+
+  @if (serverErrors()['*']) {
+    <div class="form-errors">{{ serverErrors()['*'] }}</div>
   }
 
   @if (formErrors().length) {

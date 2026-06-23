@@ -21,9 +21,14 @@ export class InputFieldComponent {
   readonly state      = computed(() => this.control()());
   readonly isDisabled = computed(() => this.disabledSig()());
 
+  readonly serverError = input<string | null>(null);
+
   readonly isNumeric = computed(() => this.config().inputType === 'number');
-  readonly showError = computed(() => this.state().touched() && this.state().invalid());
-  readonly errorInfo = computed(() => firstErrorInfo(this.state().errors()));
+  readonly showError = computed(() => (this.state().touched() && this.state().invalid()) || !!this.serverError());
+  readonly errorInfo = computed(() => {
+    const se = this.serverError();
+    return se ? { key: se } : firstErrorInfo(this.state().errors());
+  });
 
   readonly numericValue = computed(() => {
     const v = this.state().value();

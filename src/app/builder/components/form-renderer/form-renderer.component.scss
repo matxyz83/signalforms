@@ -13,6 +13,24 @@
   min-width: 0; // evita overflow in celle grid con contenuto lungo
 }
 
+.form-section {
+  grid-column: 1 / -1; // sovrascrivibile con [style.grid-column] dal template
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--kendo-color-border, #e0e0e0);
+  margin-top: 4px;
+}
+
+.form-section-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--kendo-color-subtle, #666);
+}
+
 .form-errors {
   list-style: none;
   margin: 4px 0 0;

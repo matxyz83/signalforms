@@ -21,8 +21,13 @@ export class TextareaFieldComponent {
   readonly state      = computed(() => this.control()());
   readonly isDisabled = computed(() => this.disabledSig()());
 
-  readonly showError   = computed(() => this.state().touched() && this.state().invalid());
-  readonly errorInfo   = computed(() => firstErrorInfo(this.state().errors()));
+  readonly serverError = input<string | null>(null);
+
+  readonly showError = computed(() => (this.state().touched() && this.state().invalid()) || !!this.serverError());
+  readonly errorInfo = computed(() => {
+    const se = this.serverError();
+    return se ? { key: se } : firstErrorInfo(this.state().errors());
+  });
   readonly stringValue = computed(() => String(this.state().value() ?? ''));
 
   onInput(event: Event): void {

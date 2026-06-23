@@ -91,12 +91,17 @@ export class ComboboxFieldComponent {
       : base;
   });
 
+  readonly serverError = input<string | null>(null);
+
   readonly arrayValue = computed<FieldOption[]>(() => {
     const v = this.state().value();
     return Array.isArray(v) ? (v as FieldOption[]) : [];
   });
-  readonly showError = computed(() => this.state().touched() && this.state().invalid());
-  readonly errorInfo = computed(() => firstErrorInfo(this.state().errors()));
+  readonly showError = computed(() => (this.state().touched() && this.state().invalid()) || !!this.serverError());
+  readonly errorInfo = computed(() => {
+    const se = this.serverError();
+    return se ? { key: se } : firstErrorInfo(this.state().errors());
+  });
 
   constructor() {
     this.searchInput$.pipe(

@@ -147,13 +147,18 @@ export class LookupFieldComponent {
   readonly state      = computed(() => this.control()());
   readonly isDisabled = computed(() => this.disabledSig()());
 
+  readonly serverError = input<string | null>(null);
+
   readonly displayValue = computed(() => {
     const v = this.state().value() as FieldOption | null;
     return v?.label ?? '';
   });
 
-  readonly showError = computed(() => this.state().touched() && this.state().invalid());
-  readonly errorInfo = computed(() => firstErrorInfo(this.state().errors()));
+  readonly showError = computed(() => (this.state().touched() && this.state().invalid()) || !!this.serverError());
+  readonly errorInfo = computed(() => {
+    const se = this.serverError();
+    return se ? { key: se } : firstErrorInfo(this.state().errors());
+  });
 
   readonly searchIcon: SVGIcon = searchIcon;
   readonly clearIcon:  SVGIcon = xIcon;
