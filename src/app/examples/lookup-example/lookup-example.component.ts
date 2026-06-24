@@ -154,6 +154,9 @@ type NewProductForm = Omit<
   ],
 })
 export class CreateProductDialogComponent {
+  private readonly dialogRef = inject(DialogRef);
+  private readonly engine = inject(FormEngineService);
+
   readonly formConfig: FormFieldConfig[] = [
     {
       type: FieldType.Input,
@@ -170,11 +173,10 @@ export class CreateProductDialogComponent {
     prezzo: 0,
   });
 
-  private readonly engine = inject(FormEngineService);
-
-  readonly form = this.engine.buildForm(this.formModel, this.formConfig);
-
-  private readonly dialogRef = inject(DialogRef);
+  protected readonly form = this.engine.buildForm(
+    this.formModel,
+    this.formConfig,
+  );
 
   cancel(): void {
     this.dialogRef.close(null);
@@ -195,12 +197,13 @@ export class CreateProductDialogComponent {
   styleUrl: "./lookup-example.component.scss",
 })
 export class LookupExampleComponent {
+  private readonly dialogService = inject(DialogService);
+  private readonly engine = inject(FormEngineService);
+
   readonly currentId = signal<number | null>(null);
   readonly formConfig: FormFieldConfig[] = this.buildFormConfig();
 
   readonly formModel = signal<OrdineForm>(EMPTY);
-  private readonly engine = inject(FormEngineService);
-
   readonly form = this.engine.buildForm(this.formModel, this.formConfig);
 
   readonly gridColumns: GridColumnConfig[] = [
@@ -228,8 +231,6 @@ export class LookupExampleComponent {
   readonly lastPayload = signal<string | null>(null);
   readonly showForm = signal(false);
 
-  private readonly dialogService = inject(DialogService);
-
   cancelForm(): void {
     this.showForm.set(false);
   }
@@ -253,7 +254,7 @@ export class LookupExampleComponent {
     this.showForm.set(true);
   }
 
-  onFormSubmit(payload: Record<string, unknown>): void {
+  onFormSubmit(payload: unknown): void {
     const ordine = payload as unknown as OrdineForm;
     if (this.isNew()) {
       const nextId = Math.max(0, ...this.orders().map((o) => o.id ?? 0)) + 1;
@@ -314,7 +315,7 @@ export class LookupExampleComponent {
               if (res instanceof DialogCloseResult || res === null) {
                 result$.next(null);
               } else {
-                const data = res as unknown as  NewProductForm;
+                const data = res as unknown as NewProductForm;
                 const id = `P${String(CATALOG.length + 1).padStart(3, "0")}`;
                 CATALOG.push({
                   id,

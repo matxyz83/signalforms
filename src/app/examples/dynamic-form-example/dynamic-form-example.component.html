@@ -16,46 +16,28 @@
   </div>
 
   @if (showConfigJson) {
-    <div class="card config-card">
-      <h3>DynamicFieldConfig[] — dalla "API"</h3>
-      <pre>{{ dynConfigJson }}</pre>
-    </div>
+  <div class="card config-card">
+    <h3>DynamicFieldConfig[] — dalla "API"</h3>
+    <pre>{{ dynConfigJson }}</pre>
+  </div>
   }
 
   <div class="card">
-    <app-grid-renderer
-      [data]="gridData()"
-      [columns]="gridColumns"
-      [state]="gridState()"
-      [editable]="true"
-      [pageable]="false"
-      (stateChange)="onGridStateChange($event)"
-      (createClick)="onCreateClick()"
-      (editClick)="onEditClick($event)"
-      (deleteClick)="onDeleteClick($event)"
-    />
+    <app-grid-renderer [data]="gridData()" [columns]="gridColumns" [state]="gridState()" [editable]="true"
+      [pageable]="false" (stateChange)="onGridStateChange($event)" (createClick)="onCreateClick()"
+      (editClick)="onEditClick($event)" (deleteClick)="onDeleteClick($event)" />
   </div>
 
-  <app-form-dialog
-    [open]="showForm()"
-    [title]="isNew() ? 'Nuovo membro' : 'Modifica #' + currentId()"
-    formId="member-form"
-    [submitLabel]="isNew() ? 'Crea' : 'Salva'"
-    (cancel)="cancelForm()"
-  >
-    <app-form-renderer
-      formId="member-form"
-      [config]="fullFormConfig"
-      [form]="form"
-      [columns]="formColumns"
-      (formSubmit)="onFormSubmit($event)"
-    />
+  <app-form-dialog [open]="showForm()" [title]="isNew() ? 'Nuovo membro' : 'Modifica #' + currentId()"
+    formId="member-form" [submitLabel]="isNew() ? 'Crea' : 'Salva'" (cancel)="cancelForm()">
+    <app-form-renderer formId="member-form" [config]="fullFormConfig" [form]="form" [columns]="formColumns"
+      (formSubmit)="onFormSubmit($event)" />
   </app-form-dialog>
 
   @if (lastPayload) {
-    <div class="card payload-card">
-      <h3>Ultimo payload <small>— i campi dinamici sono in <code>data</code></small></h3>
-      <pre>{{ lastPayload }}</pre>
-    </div>
+  <div class="card payload-card">
+    <h3>Ultimo payload <small>— i campi dinamici sono in <code>data</code></small></h3>
+    <pre>{{ lastPayload }}</pre>
+  </div>
   }
 </section>

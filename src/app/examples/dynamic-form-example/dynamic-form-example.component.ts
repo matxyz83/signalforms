@@ -6,9 +6,9 @@ import {
 } from '../../builder/models/form-field-config';
 import { DynamicFormService } from '../../builder/services/dynamic-form.service';
 import { FormEngineService } from '../../builder/services/form-engine.service';
-import { FormRendererComponent } from '../../builder/components/form-renderer/form-renderer.component';
 import { FormDialogComponent } from '../../builder/components/form-dialog/form-dialog.component';
 import { GridRendererComponent, TypedGridResult } from '../../builder/components/grid-renderer/grid-renderer.component';
+import { FormRendererComponent } from "../../builder/components/form-renderer/form-renderer.component";
 
 /** Entità con campi statici + campi dinamici serializzati in `data` */
 interface MemberEntity {
@@ -134,8 +134,8 @@ const SAMPLE_MEMBERS: MemberEntity[] = [
   styleUrl: './dynamic-form-example.component.scss',
 })
 export class DynamicFormExampleComponent {
-  private readonly engine     = inject(FormEngineService);
   private readonly dynService = inject(DynamicFormService);
+  private readonly engine     = inject(FormEngineService);
 
   // Config form completa: statica + dinamica convertita
   readonly fullFormConfig: FormFieldConfig[] = [
@@ -195,9 +195,9 @@ export class DynamicFormExampleComponent {
     this.showForm.set(true);
   }
 
-  onFormSubmit(payload: Record<string, unknown>): void {
+  onFormSubmit(payload: unknown): void {
     // collapsePayload ricollassa i campi dinamici flat nel campo data: string
-    const entity = this.dynService.collapsePayload(payload, DYNAMIC_FIELDS) as unknown as MemberEntity;
+    const entity = this.dynService.collapsePayload(payload as Record<string, unknown>, DYNAMIC_FIELDS) as unknown as MemberEntity;
     this.lastPayload = JSON.stringify(entity, null, 2);
 
     if (this.isNew()) {

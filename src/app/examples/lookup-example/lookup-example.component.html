@@ -8,37 +8,20 @@
 </div>
 
 <div class="card">
-  <app-grid-renderer
-    [data]="gridData()"
-    [columns]="gridColumns"
-    [state]="gridState()"
-    [editable]="true"
-    [pageable]="false"
-    (stateChange)="onGridStateChange($event)"
-    (createClick)="onCreateClick()"
-    (editClick)="onEditClick($event)"
-    (deleteClick)="onDeleteClick($event)"
-  />
+  <app-grid-renderer [data]="gridData()" [columns]="gridColumns" [state]="gridState()" [editable]="true"
+    [pageable]="false" (stateChange)="onGridStateChange($event)" (createClick)="onCreateClick()"
+    (editClick)="onEditClick($event)" (deleteClick)="onDeleteClick($event)" />
 </div>
 
-<app-form-dialog
-  [open]="showForm()"
-  [title]="isNew() ? 'Nuovo ordine' : 'Modifica ordine #' + currentId()"
-  formId="lookup-example-form"
-  [submitLabel]="isNew() ? 'Crea' : 'Salva'"
-  (cancel)="cancelForm()"
->
-  <app-form-renderer
-    formId="lookup-example-form"
-    [config]="formConfig"
-    [form]="form"
-    (formSubmit)="onFormSubmit($event)"
-  />
+<app-form-dialog [open]="showForm()" [title]="isNew() ? 'Nuovo ordine' : 'Modifica ordine #' + currentId()"
+  formId="lookup-example-form" [submitLabel]="isNew() ? 'Crea' : 'Salva'" (cancel)="cancelForm()">
+  <app-form-renderer formId="lookup-example-form" [config]="formConfig" [form]="form"
+    (formSubmit)="onFormSubmit($event)" />
 </app-form-dialog>
 
 @if (lastPayload()) {
-  <div class="card payload-card">
-    <h3>Ultimo payload</h3>
-    <pre>{{ lastPayload() }}</pre>
-  </div>
+<div class="card payload-card">
+  <h3>Ultimo payload</h3>
+  <pre>{{ lastPayload() }}</pre>
+</div>
 }

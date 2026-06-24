@@ -33,19 +33,10 @@ const FIELD_COMPONENTS: Partial<Record<FieldType, Type<unknown>>> = {
   styleUrl: './form-renderer.component.scss',
 })
 export class FormRendererComponent<T> {
-  readonly columns  = input<number>(1);
+  private readonly isFieldNode = (f: FormFieldConfig) =>
+    f.type !== FieldType.Section && f.showInForm !== false;
   readonly config   = input.required<FormFieldConfig[]>();
-  readonly FieldType = FieldType;
   readonly form     = input.required<FieldTree<T>>();
-  readonly formErrors = computed<ValidationError[]>(() => {
-    const rootState = (this.form())();
-    if (!rootState.touched()) return [];
-    return rootState.errors() as ValidationError[];
-  });
-  readonly formId   = input<string>('form-renderer');
-
-  readonly formSubmit = output<T>();
-
   readonly formValuesSignal: Signal<Record<string, unknown>> = computed(() => {
     const tree = this.form() as any;
     const result: Record<string, unknown> = {};
@@ -56,17 +47,6 @@ export class FormRendererComponent<T> {
     }
     return result;
   });
-
-  /**
-   * Errori server-side per singolo campo: `{ email: 'Email già in uso' }`.
-   * Mostrati immediatamente (senza bisogno di touched), sovrascrivono gli errori
-   * di validazione. Il parent li gestisce e li azzera quando l'utente modifica il campo.
-   */
-  readonly serverErrors = input<Record<string, string>>({});
-
-  private readonly isFieldNode = (f: FormFieldConfig) =>
-    f.type !== FieldType.Section && f.showInForm !== false;
-
   private readonly disabledSignals = computed(() =>
     new Map<string, Signal<boolean>>(
       this.config()
@@ -80,7 +60,6 @@ export class FormRendererComponent<T> {
         }),
     ),
   );
-
   private readonly fieldTreeCache = computed(() => {
     const formTree = this.form() as Record<string, unknown>;
     return new Map<string, FieldTree<unknown>>(
@@ -89,6 +68,13 @@ export class FormRendererComponent<T> {
         .map(f => [f.field, untracked(() => formTree[f.field]) as FieldTree<unknown>]),
     );
   });
+
+  /**
+   * Errori server-side per singolo campo: `{ email: 'Email già in uso' }`.
+   * Mostrati immediatamente (senza bisogno di touched), sovrascrivono gli errori
+   * di validazione. Il parent li gestisce e li azzera quando l'utente modifica il campo.
+   */
+  readonly serverErrors = input<Record<string, string>>({});
 
   private readonly inputsCache = computed(() => {
     const se = this.serverErrors();
@@ -111,6 +97,20 @@ export class FormRendererComponent<T> {
         }),
     );
   });
+
+  readonly columns  = input<number>(1);
+
+  readonly FieldType = FieldType;
+
+  readonly formErrors = computed<ValidationError[]>(() => {
+    const rootState = (this.form())();
+    if (!rootState.touched()) return [];
+    return rootState.errors() as ValidationError[];
+  });
+
+  readonly formId   = input<string>('form-renderer');
+
+  readonly formSubmit = output<T>();
 
   componentFor(field: FormFieldConfig): Type<unknown> {
     return FIELD_COMPONENTS[field.type] ?? InputFieldComponent;

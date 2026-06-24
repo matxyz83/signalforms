@@ -247,15 +247,22 @@ cancelForm(): void {
 
 ### Form Dialog (`src/app/builder/components/form-dialog/`)
 
-File: `form-dialog.component.{ts,html,scss}`
+File: `form-dialog.component.ts` (template inline, nessun `.html` separato)
 
-`FormDialogComponent` — wrapper Kendo dialog con `ng-content`. Solo per dialog (nessuna modalità inline).
+Due classi nello stesso file:
+
+- **`FormDialogShellComponent`** (non esportato) — shell aperto via `DialogService`; contiene `<div #bodySlot>` (target per il contenuto teleportato) e i bottoni Cancel/Submit con `kendo-dialog-actions`.
+- **`FormDialogComponent`** (esportato) — componente pubblico; template: `<div #contentWrapper style="display:none"><ng-content /></div>`. Usa `DialogService` internamente con **DOM teleportation**.
+
+**Utilizzo nel parent:**
 
 ```html
 <app-form-dialog [open]="show()" title="Titolo" formId="my-form" submitLabel="Salva" (cancel)="onCancel()">
   <app-form-renderer formId="my-form" [config]="config" [form]="form" (formSubmit)="onSubmit($event)" />
 </app-form-dialog>
 ```
+
+Il parent deve avere `FormRendererComponent` nel proprio `imports` array (proiezione diretta via `ng-content`, compilata nel contesto del parent).
 
 Input: `open`, `title`, `formId`, `submitLabel`, `width`. Output: `cancel`. Il `formId` va passato identico a dialog e renderer per collegare il pulsante submit al `<form>`.
 
@@ -268,6 +275,13 @@ Input: `open`, `title`, `formId`, `submitLabel`, `width`. Output: `cancel`. Il `
 
 - `title` e `submitLabel` sono stringhe plain (non chiavi Transloco) — il parent è responsabile di passare il testo già localizzato.
 - Solo `form.cancel` (bottone Annulla) è tradotto internamente con `| transloco`.
+
+**Meccanismo DOM teleportation:**
+1. Il contenuto proiettato (`<app-form-renderer>`) viene tenuto in `#contentWrapper` con `display:none` finché il dialog non è aperto.
+2. All'apertura: `dialogService.open(FormDialogShellComponent)` crea lo shell; dopo `setTimeout(0)` (attende `ngAfterViewInit` dello shell) sposta `contentWrapper.nativeElement` nel `bodySlot` dello shell con `appendChild` e toglie `display:none`.
+3. Alla chiusura: ripristina `display:none` e rimette il wrapper nel DOM originale con `insertBefore`/`appendChild`.
+4. I binding Angular (`(formSubmit)`, `[config]`, `[serverErrors]` ecc.) sopravvivono allo spostamento DOM — le sottoscrizioni agli output sono a livello framework, non DOM.
+5. `closingProgrammatically = true` prima di chiamare `dialogRef.close()` programmaticamente (es. quando `open()` diventa `false` dopo un submit) per evitare di emettere `cancel` inutilmente.
 
 ### Grid Renderer (`src/app/builder/components/grid-renderer/`)
 
@@ -577,6 +591,8 @@ type AnyValidator = ValidatorConfig | CustomValidatorFn | AsyncValidatorConfig;
 
 ## Pattern di design
 
+- **DOM teleportation in `FormDialogComponent`**: il contenuto proiettato via `ng-content` viene tenuto in un wrapper `display:none`. All'apertura, `appendChild` sposta il wrapper nel `bodySlot` dello shell (creato da `DialogService`) e toglie `display:none`. Alla chiusura, `insertBefore`/`appendChild` ripristina il wrapper in posizione originale. I binding Angular sopravvivono perché le sottoscrizioni agli output sono a livello framework. `setTimeout(0)` garantisce che `viewChild('bodySlot')` dello shell sia risolto (ngAfterViewInit) prima del move. `closingProgrammatically` flag previene l'emissione spurie di `cancel` alla chiusura programmatica.
+- **`ng-content` vs `ng-template` in content projection**: `<ng-content>` diretto proietta il contenuto nel **contesto del parent** (template type-checked correttamente, componenti nell'`imports` del parent riconosciuti). `<ng-template>` dentro la proiezione NON è compilato nel contesto del parent — Angular lancia `-998001`/`-998002` anche se il componente è negli `imports` dell'host. Usare sempre proiezione diretta per contenuto dinamico da template; `ng-template` solo se il componente figlio lo richiede esplicitamente.
 - **`resolveOptions()` helper** nei componenti select/combobox: normalizza `FieldOption[] | Observable<FieldOption[]>` → `Observable<FieldOption[]>`
 - **`resolvedOptionsObs` computed** in select/combobox: gestisce i tre formati di `options` (array, Observable, lambda); chiama `runInInjectionContext` per la lambda; alimenta `toSignal(toObservable(...).pipe(switchMap(...)))`.
 - **`FieldTree<T>` come funzione callable**: `fieldTree()` → `FieldState<T>`; `fieldTree[key]` → `FieldTree<T[key]>`

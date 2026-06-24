@@ -119,7 +119,7 @@ function weekdaysForLocale(locale: string): FieldOption[] {
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [KENDO_DIALOGS, GridRendererComponent, FormDialogComponent, FormRendererComponent, DynamicFormExampleComponent, LookupExampleComponent, NestedArrayExampleComponent],
+  imports: [KENDO_DIALOGS, GridRendererComponent, FormRendererComponent, FormDialogComponent, DynamicFormExampleComponent, LookupExampleComponent, NestedArrayExampleComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
 })
@@ -128,15 +128,15 @@ export class AppComponent {
   private readonly loader = inject(OptionsLoaderService);
   private readonly transloco = inject(TranslocoService);
 
-  readonly activeLang = toSignal(this.transloco.langChanges$, { initialValue: this.transloco.getActiveLang() });
-  readonly currentId = signal<number | null>(null);
+  protected readonly activeLang = toSignal(this.transloco.langChanges$, { initialValue: this.transloco.getActiveLang() });
+  protected readonly currentId = signal<number | null>(null);
 
-  readonly formModel = signal<PersonFormView>(
+  protected readonly formConfig: FormFieldConfig[] = this.buildFormConfig();
+  protected readonly formModel = signal<PersonFormView>(
     AppComponent.toView(EMPTY, weekdaysForLocale(this.transloco.getActiveLang())),
   );
-  readonly formConfig: FormFieldConfig[] = this.buildFormConfig();
 
-  readonly form = this.engine.buildForm(this.formModel, this.formConfig, {
+  protected readonly form = this.engine.buildForm(this.formModel, this.formConfig, {
     validators: [
       values => values.termini === false && values.nome !== ''
         ? { kind: 'terminiRequired', message: 'Devi accettare i termini per procedere' }
@@ -144,9 +144,9 @@ export class AppComponent {
     ],
   });
 
-  readonly formServerErrors = signal<Record<string, string>>({});
+  protected readonly formServerErrors = signal<Record<string, string>>({});
 
-  readonly gridColumns: GridColumnConfig[] = [
+  protected readonly gridColumns: GridColumnConfig[] = [
     { field: 'nome',        title: 'columns.nome',        filter: 'text' },
     { field: 'email',       title: 'columns.email',       filter: 'text' },
     { field: 'eta',         title: 'columns.eta',         width: 75,  filter: 'numeric' },
@@ -187,29 +187,29 @@ export class AppComponent {
     { field: 'newsletter',  title: 'columns.newsletter',  width: 110, filter: 'boolean', display: 'boolean' },
     { field: 'dataNascita', title: 'columns.dataNascita', width: 180, filter: 'date', format: 'dd/MM/yyyy' },
   ];
-  readonly gridState = signal<State>({ skip: 0, take: 5, filter: { filters: [], logic: 'and' } });
-  readonly people = signal<PersonForm[]>(SAMPLE_PEOPLE);
+  protected readonly gridState = signal<State>({ skip: 0, take: 5, filter: { filters: [], logic: 'and' } });
+  protected readonly people = signal<PersonForm[]>(SAMPLE_PEOPLE);
 
   /** Nomi dei giorni localizzati: si ricalcola ad ogni cambio lingua. */
-  readonly weekdays = computed(() => weekdaysForLocale(this.activeLang()));
+  protected readonly weekdays = computed(() => weekdaysForLocale(this.activeLang()));
   // Mappa PersonForm → PersonFormView prima di passare alla griglia.
   // Dipende da weekdays() per aggiornare le label al cambio lingua.
-  readonly gridData = computed<TypedGridResult<PersonFormView>>(() => {
+  protected readonly gridData = computed<TypedGridResult<PersonFormView>>(() => {
     const wd = this.weekdays();
     return process(
       this.people().map(p => AppComponent.toView(p, wd)) as unknown as Record<string, unknown>[],
       this.gridState(),
     ) as TypedGridResult<PersonFormView>;
   });
-  readonly isNew    = signal(false);
-  lastAction: { label: string; json: string } | null = null;
+  protected readonly isNew    = signal(false);
+  protected lastAction: { label: string; json: string } | null = null;
 
-  readonly selectedJson = () => JSON.stringify(this.selectedPeople().map(AppComponent.fromView), null, 2);
+  protected readonly selectedJson = () => JSON.stringify(this.selectedPeople().map(AppComponent.fromView), null, 2);
 
   // La griglia emette PersonFormView (dati già mappati); la serializzazione JSON
   // mostra fromView() così il payload finale ha weekday: number.
-  readonly selectedPeople = signal<PersonFormView[]>([]);
-  readonly showForm = signal(false);
+  protected readonly selectedPeople = signal<PersonFormView[]>([]);
+  protected readonly showForm = signal(false);
 
   cancelForm(): void {
     this.formServerErrors.set({});
@@ -236,8 +236,8 @@ export class AppComponent {
     this.showForm.set(true);
   }
 
-  onFormSubmit(payload: PersonFormView): void {
-    const person = AppComponent.fromView(payload);
+  onFormSubmit(payload: unknown): void {
+    const person = AppComponent.fromView(payload as PersonFormView);
     // Simula errore server: "Admin" è un nome riservato.
     if (person.nome === 'Admin') {
       this.formServerErrors.set({ nome: 'Questo nome è riservato (errore simulato dal server)' });

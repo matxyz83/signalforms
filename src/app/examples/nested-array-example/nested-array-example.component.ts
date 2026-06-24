@@ -31,6 +31,8 @@ const EMPTY: PreventivoForm = {
   styleUrl: './nested-array-example.component.scss',
 })
 export class NestedArrayExampleComponent {
+  private readonly engine = inject(FormEngineService);
+
   readonly formConfig: FormFieldConfig[] = [
     {
       type: FieldType.Array,
@@ -60,8 +62,6 @@ export class NestedArrayExampleComponent {
   ];
 
   readonly model = signal<PreventivoForm>(EMPTY);
-
-  private readonly engine = inject(FormEngineService);
 
   readonly form = this.engine.buildForm(this.model, this.formConfig);
 

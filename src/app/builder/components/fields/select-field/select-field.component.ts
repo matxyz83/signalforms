@@ -23,32 +23,15 @@ function resolveOptions(opts: FieldOption[] | Observable<FieldOption[]> | undefi
   styleUrl: './select-field.component.scss',
 })
 export class SelectFieldComponent {
-  readonly control     = input.required<FieldTree<unknown>>();
-  readonly state      = computed(() => this.control()());
-  readonly arrayValue = computed<FieldOption[]>(() => {
-    const v = this.state().value();
-    return Array.isArray(v) ? (v as FieldOption[]) : [];
-  });
-  readonly config      = input.required<FormFieldConfig>();
-
   private readonly transloco = inject(TranslocoService);
-  // TranslocoService necessario qui: defaultItem.label è una stringa dentro un oggetto Kendo,
-  // non può essere tradotta con la pipe nel template.
-  readonly defaultItem = computed(() => ({
-    label: this.transloco.translate(this.config().placeholder ?? 'select.choose'),
-    value: null,
-  }));
-
-  readonly disabledSig = input<Signal<boolean>>(signal(false));
   private readonly injector  = inject(Injector);
-
   readonly formValues  = input<Signal<Record<string, unknown>> | undefined>(undefined);
-
   private readonly stateValues = computed<Record<string, unknown>>(() => {
     const sig = this.formValues();
     return sig ? sig() : {};
   });
 
+  readonly config      = input.required<FormFieldConfig>();
   private readonly resolvedOptionsObs = computed<Observable<FieldOption[]>>(() => {
     const cfg = this.config();
     const opts = cfg.options;
@@ -58,6 +41,23 @@ export class SelectFieldComponent {
     }
     return resolveOptions(opts);
   });
+
+  readonly control     = input.required<FieldTree<unknown>>();
+  readonly state      = computed(() => this.control()());
+
+  readonly arrayValue = computed<FieldOption[]>(() => {
+    const v = this.state().value();
+    return Array.isArray(v) ? (v as FieldOption[]) : [];
+  });
+
+  // TranslocoService necessario qui: defaultItem.label è una stringa dentro un oggetto Kendo,
+  // non può essere tradotta con la pipe nel template.
+  readonly defaultItem = computed(() => ({
+    label: this.transloco.translate(this.config().placeholder ?? 'select.choose'),
+    value: null,
+  }));
+
+  readonly disabledSig = input<Signal<boolean>>(signal(false));
 
   readonly displayOptions = toSignal(
     toObservable(this.resolvedOptionsObs).pipe(switchMap(obs => obs)),

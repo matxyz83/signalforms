@@ -69,20 +69,20 @@ export class RowRendererComponent {
   styleUrl: './array-field.component.scss',
 })
 export class ArrayFieldComponent {
+  readonly control = input.required<FieldTree<unknown[]>>();
+  private readonly state = computed(() => this.control()());
+
   /**
    * Self-reference passata a RowRendererComponent per il rendering di array annidati.
    * Property d'istanza (non statica): viene inizializzata alla costruzione dell'oggetto,
    * quando la classe è già definita — nessuna TDZ.
    */
   readonly ArrayFieldRef: Type<unknown> = ArrayFieldComponent as unknown as Type<unknown>;
+
   readonly config  = input.required<FormFieldConfig>();
-
-  readonly control = input.required<FieldTree<unknown[]>>();
-
   readonly iconAdd: SVGIcon   = plusIcon;
-  readonly iconRemove: SVGIcon = trashIcon;
 
-  private readonly state = computed(() => this.control()());
+  readonly iconRemove: SVGIcon = trashIcon;
 
   readonly indices   = computed(() =>
     Array.from({ length: (this.state().value() as unknown[]).length }, (_, i) => i),

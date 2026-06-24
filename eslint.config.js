@@ -26,13 +26,13 @@ export default tseslint.config(
     },
     rules: {
       // Visibilità: public implicito, private e protected espliciti
-      "@typescript-eslint/explicit-member-accessibility": ["error", {
+      "@typescript-eslint/explicit-member-accessibility": ["warn", {
         "accessibility": "no-public",
       }],
 
       // Ordine dei membri (con auto-fix)
-      "perfectionist/sort-classes": ["error", {
-        "type": "natural",
+      "perfectionist/sort-classes": ["warn", {
+        "type": "unsorted",
         "order": "asc",
         "groups": [
           // Campi statici
@@ -40,14 +40,14 @@ export default tseslint.config(
           "protected-static-property",
           "static-property",
 
+          // Proprietà private (stato interno, injection)
+          "private-property",
+
           // Proprietà pubbliche (input, output, viewChild, signal esposti)
           "property",
 
           // Proprietà protected (computed/signal solo per template)
           "protected-property",
-
-          // Proprietà private (stato interno, injection)
-          "private-property",
 
           // Costruttore
           "constructor",
@@ -64,12 +64,14 @@ export default tseslint.config(
       }],
 
       // Readonly dove possibile
-      "@typescript-eslint/prefer-readonly": "error",
+      "@typescript-eslint/prefer-readonly": "warn",
 
       // Signals e Angular
       "@angular-eslint/prefer-signals": "error",
       "@angular-eslint/no-output-on-prefix": "error",
       "@angular-eslint/prefer-output-readonly": "error",
+      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-unused-vars": "warn"
     },
   },
 

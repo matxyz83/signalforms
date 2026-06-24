@@ -71,18 +71,18 @@ const LOOKUP_CREATE_KEY = '__lookup_create__';
   `],
 })
 export class LookupDialogComponent {
+  private readonly dialogRef = inject(DialogRef);
+
+  private readonly searchInput$ = new Subject<string>();
+
   readonly loading    = signal(false);
 
   /** Impostato dal parent subito dopo dialogService.open() */
   lookupConfig!: LookupConfig;
-
   readonly plusIcon: SVGIcon = plusIcon;
-
   readonly results    = signal<Record<string, unknown>[]>([]);
-  readonly searchTerm = signal('');
-  private readonly dialogRef = inject(DialogRef);
 
-  private readonly searchInput$ = new Subject<string>();
+  readonly searchTerm = signal('');
 
   constructor() {
     this.searchInput$.pipe(
@@ -140,18 +140,21 @@ export class LookupDialogComponent {
   styleUrl: './lookup-field.component.scss',
 })
 export class LookupFieldComponent {
+  private readonly dialogService = inject(DialogService);
+  private readonly transloco     = inject(TranslocoService);
   readonly clearIcon:  SVGIcon = xIcon;
+
   readonly config      = input.required<FormFieldConfig>();
   readonly control     = input.required<FieldTree<unknown>>();
 
   readonly disabledSig = input<Signal<boolean>>(signal(false));
+
   readonly state      = computed(() => this.control()());
 
   readonly displayValue = computed(() => {
     const v = this.state().value() as FieldOption | null;
     return v?.label ?? '';
   });
-
   readonly serverError = input<string | null>(null);
 
   readonly errorInfo = computed(() => {
@@ -162,9 +165,6 @@ export class LookupFieldComponent {
 
   readonly searchIcon: SVGIcon = searchIcon;
   readonly showError = computed(() => (this.state().touched() && this.state().invalid()) || !!this.serverError());
-
-  private readonly dialogService = inject(DialogService);
-  private readonly transloco     = inject(TranslocoService);
 
   clear(): void {
     const s = this.state();

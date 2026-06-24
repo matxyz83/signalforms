@@ -24,24 +24,16 @@ function resolveOptions(opts: FieldOption[] | Observable<FieldOption[]> | undefi
   styleUrl: './combobox-field.component.scss',
 })
 export class ComboboxFieldComponent {
-  readonly control     = input.required<FieldTree<unknown>>();
-  readonly state      = computed(() => this.control()());
-  readonly arrayValue = computed<FieldOption[]>(() => {
-    const v = this.state().value();
-    return Array.isArray(v) ? (v as FieldOption[]) : [];
-  });
-  readonly config      = input.required<FormFieldConfig>();
-
-  readonly disabledSig = input<Signal<boolean>>(signal(false));
-
   private readonly _openCount    = signal(0);
   private readonly injector = inject(Injector);
   readonly formValues  = input<Signal<Record<string, unknown>> | undefined>(undefined);
-
   private readonly stateValues = computed<Record<string, unknown>>(() => {
     const sig = this.formValues();
     return sig ? sig() : {};
   });
+
+  readonly config      = input.required<FormFieldConfig>();
+
   private readonly resolvedOptionsObs = computed<Observable<FieldOption[]>>(() => {
     const cfg = this.config();
     const opts = cfg.options;
@@ -63,8 +55,18 @@ export class ComboboxFieldComponent {
   });
 
   private readonly filterTerm    = signal('');
-
   private readonly searchResults = signal<FieldOption[]>([]);
+  private readonly searchInput$  = new Subject<string>();
+  readonly control     = input.required<FieldTree<unknown>>();
+
+  readonly state      = computed(() => this.control()());
+
+  readonly arrayValue = computed<FieldOption[]>(() => {
+    const v = this.state().value();
+    return Array.isArray(v) ? (v as FieldOption[]) : [];
+  });
+
+  readonly disabledSig = input<Signal<boolean>>(signal(false));
 
   readonly displayData = computed<FieldOption[]>(() => {
     this._openCount();
@@ -98,10 +100,8 @@ export class ComboboxFieldComponent {
   });
 
   readonly isDisabled = computed(() => this.disabledSig()());
-
   readonly loading    = signal(false);
   readonly showError = computed(() => (this.state().touched() && this.state().invalid()) || !!this.serverError());
-  private readonly searchInput$  = new Subject<string>();
 
   constructor() {
     this.searchInput$.pipe(

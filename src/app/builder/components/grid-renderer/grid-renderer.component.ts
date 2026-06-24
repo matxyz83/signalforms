@@ -26,6 +26,38 @@ export type TypedGridResult<T> = { data: T[]; total: number };
   styleUrl: './grid-renderer.component.scss',
 })
 export class GridRendererComponent<T extends Record<string, unknown>> {
+  // Filtri manuali per colonne FieldOption[] (es. interessi), non gestibili via Kendo Data Query
+  private readonly _arrayFilters = signal(new Map<string, unknown>());
+  // Filtri time: confronto solo sulla parte oraria (hh/mm/ss) per evitare dipendenza dalla data del giorno
+  private readonly _timeFilters = signal(new Map<string, { value: Date; operator: string }>());
+  readonly columns = input.required<GridColumnConfig[]>();
+  // Risoluzione reattiva delle opzioni filtro per le colonne combobox (statiche, Observable, factory)
+  private readonly resolvedFilterOptions = toSignal(
+    toObservable(this.columns).pipe(
+      switchMap(cols => {
+        const comboCols = cols.filter(c => c.filter === 'combobox');
+        if (!comboCols.length) return of(new Map<string, FieldOption[]>());
+        return combineLatest(
+          comboCols.map(col => {
+            const opts = col.filterOptions as GridOptionsLoader | undefined;
+            let obs$: Observable<FieldOption[]>;
+            if (!opts || Array.isArray(opts)) {
+              obs$ = of((opts as FieldOption[]) ?? []);
+            } else if (isObservable(opts)) {
+              obs$ = opts as Observable<FieldOption[]>;
+            } else {
+              obs$ = (opts as () => Observable<FieldOption[]>)();
+            }
+            return obs$.pipe(
+              startWith([] as FieldOption[]),
+              rxMap(data => [col.field, data] as const),
+            );
+          }),
+        ).pipe(rxMap(entries => new Map<string, FieldOption[]>(entries)));
+      }),
+    ),
+    { initialValue: new Map<string, FieldOption[]>() },
+  );
   /**
    * Selezione controllata dall'esterno.
    * Array di valori chiave (es. ID) oppure di oggetti — abbinare a `selectionKey`.
@@ -38,17 +70,12 @@ export class GridRendererComponent<T extends Record<string, unknown>> {
    * le scritture locali (click checkbox/riga) sovrascrivono fino al prossimo cambio di selection.
    */
   readonly _selectedKeys = linkedSignal<unknown[]>(() => this.selection());
-  readonly columns = input.required<GridColumnConfig[]>();
   readonly createClick      = output<void>();
+
   readonly data    = input.required<TypedGridResult<T>>();
   readonly deleteClick      = output<T>();
   readonly editable  = input<boolean>(false);
-
   readonly editClick        = output<T>();
-  // Filtri manuali per colonne FieldOption[] (es. interessi), non gestibili via Kendo Data Query
-  private readonly _arrayFilters = signal(new Map<string, unknown>());
-  // Filtri time: confronto solo sulla parte oraria (hh/mm/ss) per evitare dipendenza dalla data del giorno
-  private readonly _timeFilters = signal(new Map<string, { value: Date; operator: string }>());
   // Applica i filtri array e time sulla data già processata dal parent
   readonly gridData = computed<TypedGridResult<T>>(() => {
     const d = this.data();
@@ -70,10 +97,11 @@ export class GridRendererComponent<T extends Record<string, unknown>> {
     });
     return { data: filtered, total: filtered.length };
   });
-  iconAdd: SVGIcon = plusIcon;
 
+  iconAdd: SVGIcon = plusIcon;
   iconDelete: SVGIcon = trashIcon;
   iconEdit: SVGIcon = pencilIcon;
+
   /**
    * Campo (o funzione) da usare come chiave di confronto per la selezione.
    * Es. `'id'` → confronta `item.id` con i valori di `selection`.
@@ -108,34 +136,6 @@ export class GridRendererComponent<T extends Record<string, unknown>> {
   readonly state   = input<State>(DEFAULT_STATE);
 
   readonly stateChange      = output<State>();
-
-  // Risoluzione reattiva delle opzioni filtro per le colonne combobox (statiche, Observable, factory)
-  private readonly resolvedFilterOptions = toSignal(
-    toObservable(this.columns).pipe(
-      switchMap(cols => {
-        const comboCols = cols.filter(c => c.filter === 'combobox');
-        if (!comboCols.length) return of(new Map<string, FieldOption[]>());
-        return combineLatest(
-          comboCols.map(col => {
-            const opts = col.filterOptions as GridOptionsLoader | undefined;
-            let obs$: Observable<FieldOption[]>;
-            if (!opts || Array.isArray(opts)) {
-              obs$ = of((opts as FieldOption[]) ?? []);
-            } else if (isObservable(opts)) {
-              obs$ = opts as Observable<FieldOption[]>;
-            } else {
-              obs$ = (opts as () => Observable<FieldOption[]>)();
-            }
-            return obs$.pipe(
-              startWith([] as FieldOption[]),
-              rxMap(data => [col.field, data] as const),
-            );
-          }),
-        ).pipe(rxMap(entries => new Map<string, FieldOption[]>(entries)));
-      }),
-    ),
-    { initialValue: new Map<string, FieldOption[]>() },
-  );
 
   applyComboFilter(value: unknown, col: GridColumnConfig): void {
     if (col.filterOperator === 'contains') {
